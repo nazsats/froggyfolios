@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";  // ✅ Use Next.js Image for optimization
 import styles from "@/styles/home.module.css"; // ✅ Fix CSS import
 
+
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState("");
   const [result, setResult] = useState({ message: "", color: "#ffffff" });
@@ -47,9 +48,8 @@ export default function Home() {
       <Image src="/hello.png" alt="Hello" width={300} height={300} className={styles.helloImage} />
       
       <div className={styles.backSection}>
-        <a href="/">
+
           <Image src="/logo.png" alt="Logo" width={100} height={100} className={styles.smallLogo} />
-        </a>
       </div>
 
       <div className={styles.content}>
