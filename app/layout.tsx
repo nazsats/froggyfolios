@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Froggy Folios Whitelist Checker",
   description: "Check your whitelist status",
   icons: {
-    icon: "./logo.png", // ✅ Set the path to your new favicon
+    icon: "./favicon.ico", // ✅ Set the path to your new favicon
   },
 };
 
