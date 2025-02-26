@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const { address } = await req.json();
 
     if (!address) {
-      return NextResponse.json({ message: "Address is required" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Address is required" }, { status: 400 });
     }
 
     // Read whitelist data
@@ -19,24 +19,23 @@ export async function POST(req: Request) {
     if (whitelistData.gtdFreeMint.includes(address)) {
       return NextResponse.json({
         success: true,
-        isWhitelisted: true,
+        whitelistType: "gtdFreeMint",
         message: "✅ You are eligible for the GTD Free Mint phase!",
       });
     } else if (whitelistData.fcfsWL.includes(address)) {
       return NextResponse.json({
         success: true,
-        isWhitelisted: true,
+        whitelistType: "fcfsWL",
         message: "✅ You are eligible for the FCFS WL phase!",
       });
     } else {
       return NextResponse.json({
-        success: true,
-        isWhitelisted: false,
+        success: false,
         message: "❌ You are not eligible for any whitelist phase.",
       });
     }
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 }

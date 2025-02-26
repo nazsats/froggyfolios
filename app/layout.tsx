@@ -1,23 +1,24 @@
-import type { Metadata } from "next";
-import "./globals.css"; // ✅ Ensure global styles are here
-import { Analytics } from '@vercel/analytics/next';
+"use client";  // Ensure it's a client component
 
-export const metadata: Metadata = {
-  title: "Froggy Folios Whitelist Checker",
-  description: "Check your whitelist status",
-  icons: {
-    icon: "./favicon.ico", // ✅ Set the path to your new favicon
-  },
-};
+import "./globals.css"; 
+import { Analytics } from "@vercel/analytics/next";
+import SessionProvider from "./components/SessionProvider"; // Make sure this exists
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <title>Froggy Folios Whitelist Checker</title>
+        <meta name="description" content="Check your whitelist status" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body>
-        {children}
+        <SessionProvider>
+          {children}
+          </SessionProvider>
           <Analytics />
+
       </body>
-       
     </html>
   );
 }

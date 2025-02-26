@@ -1,3 +1,4 @@
+
 .container {
   margin: 0;
   padding: 0;
@@ -139,3 +140,21 @@
     width: 200px;
   }
 }
+
+
+/* styles/home.module.css */
+@media (max-width: 1024px) {
+  .navOpen {
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: rgba(31, 41, 55, 0.95); /* Gray-900 with opacity */
+    padding: 1.5rem;
+    z-index: 40;
+  }
+}
+
+
+
