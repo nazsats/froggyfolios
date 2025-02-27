@@ -41,20 +41,20 @@ const authOptions: NextAuthOptions = {
       console.log("SignIn Start - User:", JSON.stringify(user, null, 2));
       console.log("SignIn Start - Profile:", JSON.stringify(profile, null, 2));
       
-      // Try multiple ways to extract username
       const twitterUsername = profile?.data?.username || profile?.username || user?.twitter_username;
       console.log("Extracted Twitter Username:", twitterUsername);
 
       if (!twitterUsername) {
         console.error("No Twitter username found in profile.data, profile.username, or user.twitter_username");
-        return false; // Triggers AccessDenied
+        return false;
       }
 
       try {
         console.log("Attempting Supabase upsert for user:", user.id, "with username:", twitterUsername);
-        const { data, error } = await supabaseAdmin.from("users").upsert([
-          { id: user.id, twitter_username: twitterUsername },
-        ], { onConflict: ["id"] }); // Ensure upsert updates existing records
+        const { data, error } = await supabaseAdmin.from("users").upsert(
+          [{ id: user.id, twitter_username: twitterUsername }],
+          { onConflict: "id" } // Changed from ["id"] to "id"
+        );
 
         if (error) {
           console.error("Supabase Insert Error:", JSON.stringify(error, null, 2));
