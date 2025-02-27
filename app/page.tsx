@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
 import formSideImage from "@/public/form-side.png";
 import Confetti from "react-confetti";
 
@@ -19,7 +18,6 @@ export default function Home() {
       return;
     }
 
-    // Check if address starts with "bc1p" (Taproot address)
     if (!walletAddress.startsWith("bc1p")) {
       setResult({ message: "Please enter a Bitcoin Taproot address (must start with 'bc1p')", color: "#ff0000" });
       return;
@@ -33,7 +31,7 @@ export default function Home() {
         body: JSON.stringify({ address: walletAddress }),
       });
       const data = await response.json();
-      console.log("API Response:", data); // Debug log
+      console.log("API Response:", data);
 
       if (data.success) {
         setResult({ message: "", color: "#ffffff" });
@@ -56,15 +54,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-green-500 via-blue-500 via-purple-500 via-pink-500 to-yellow-500 relative font-sans">
-      {/* Top Left Logo */}
       <div className="absolute top-6 left-6 flex items-center text-white text-2xl font-bold">
         <Image src="/logo.png" alt="Froggy Logo" width={30} height={30} className="ml-2" />
         <span>Froggy Folios</span>
       </div>
 
-      {/* Main Content */}
       <div className="w-full max-w-5xl relative z-0">
-        {/* Content Container */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,7 +100,6 @@ export default function Home() {
               >
                 Check Status
               </motion.button>
-              {/* Apply Whitelist Button */}
               <motion.a
                 href="/login"
                 className="block w-full py-3 rounded-lg bg-blue-500 text-white font-semibold text-center transition transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 focus:outline-none"
@@ -132,7 +126,7 @@ export default function Home() {
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
           {whitelistType === "gtdFreeMint" ? (
-            // GTD Free Mint Popup (Eye-Catching)
+            // GTD Free Mint Popup with stareye.png (bigger)
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -144,7 +138,13 @@ export default function Home() {
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                 transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
               >
-                <CheckCircle2 className="text-white w-20 h-20 mb-4 drop-shadow-lg" />
+                <Image
+                  src="/emojis/stareye.png"
+                  alt="Stareye Frog"
+                  width={300}  // Increased from 80px
+                  height={300} // Increased from 80px
+                  className="drop-shadow-lg"
+                />
               </motion.div>
               <motion.h3
                 initial={{ y: 20, opacity: 0 }}
@@ -173,7 +173,7 @@ export default function Home() {
               <Confetti recycle={false} numberOfPieces={300} colors={["#FFD700", "#00FF00", "#FFFFFF"]} />
             </motion.div>
           ) : whitelistType === "fcfsWL" ? (
-            // FCFS WL Popup (Simpler Design)
+            // FCFS WL Popup with stareye.png (bigger)
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -185,7 +185,13 @@ export default function Home() {
                 animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
                 transition={{ duration: 1.2, repeat: Infinity, repeatType: "loop" }}
               >
-                <CheckCircle2 className="text-blue-500 w-16 h-16 mb-4" />
+                <Image
+                  src="/emojis/stareye.png"
+                  alt="Stareye Frog"
+                  width={300}  // Increased from 64px
+                  height={300} // Increased from 64px
+                  className="drop-shadow-lg"
+                />
               </motion.div>
               <motion.h3
                 initial={{ y: 20, opacity: 0 }}
@@ -214,7 +220,7 @@ export default function Home() {
               <Confetti recycle={false} numberOfPieces={100} colors={["#1E90FF", "#87CEEB"]} />
             </motion.div>
           ) : (
-            // Failure Popup with Sad Emoji
+            // Failure Popup with cry.png (bigger)
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -226,7 +232,13 @@ export default function Home() {
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
               >
-                <span className="text-6xl">😢</span>
+                <Image
+                  src="/emojis/cry.png"
+                  alt="Cry Frog"
+                  width={300}  // Increased from 64px
+                  height={300} // Increased from 64px
+                  className="drop-shadow-lg"
+                />
               </motion.div>
               <h3 className="text-3xl font-bold text-gray-800 mb-2 text-center">Ribbit! Sorry!</h3>
               <p className="text-gray-600 text-lg mb-4 text-center">You’re not on the whitelist yet.</p>
@@ -252,7 +264,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Footer */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
