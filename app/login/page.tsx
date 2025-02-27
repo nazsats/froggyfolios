@@ -1,132 +1,116 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState, useEffect } from "react"; // Add useEffect
-import { useSession } from "next-auth/react"; // Add useSession
-import { useRouter } from "next/navigation"; // Add useRouter
-import { motion } from "framer-motion";
 import Image from "next/image";
-import frogJumpImage from "@/public/frog-jump.png";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import logo from "@/public/logo.png";
+import formSideImage from "@/public/form-side.png";
 
-export default function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const { data: session, status } = useSession(); // Get session status
-  const router = useRouter(); // For redirection
+export default function Login() {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Redirect to /form if already authenticated
+  // Load theme from local storage on mount
   useEffect(() => {
-    if (status === "authenticated") {
-      console.log("User already authenticated, redirecting to /form");
-      router.replace("/form");
-    }
-  }, [status, router]);
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
+    setTheme(savedTheme || "dark");
+  }, []);
 
-  const handleLogin = async () => {
-    setLoading(true);
-    await signIn("twitter", { callbackUrl: "/form" });
+  // Save theme to local storage
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
   };
 
-  // Show loading state while checking authentication
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-blue-500 via-purple-500 via-pink-500 to-yellow-500">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="relative w-24 h-24 mb-6"
-        >
-          <Image
-            src="/logo.png"
-            alt="Froggy Spinner"
-            width={96}
-            height={96}
-            className="rounded-full border-4 border-green-500 shadow-lg"
-          />
-        </motion.div>
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-2xl font-bold text-white"
-        >
-          Ribbit! Checking your session...
-        </motion.p>
-      </div>
-    );
-  }
+  const handleLogin = () => {
+    signIn("twitter", { callbackUrl: "/form" });
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-green-500 via-blue-500 via-purple-500 via-pink-500 to-yellow-500 relative font-sans">
-      <div className="absolute top-6 left-6 flex items-center text-white text-2xl font-bold">
-        <Image src="/logo.png" alt="Froggy Logo" width={30} height={30} className="ml-2" />
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center px-4 ${
+        theme === "dark"
+          ? "bg-gradient-to-br from-green-800 via-blue-800 via-purple-800 via-pink-800 to-yellow-800 text-white"
+          : "bg-gradient-to-br from-green-300 via-blue-300 via-purple-300 via-pink-300 to-yellow-300 text-gray-900"
+      }`}
+    >
+      {/* Top Left Logo */}
+      <div className="absolute top-6 left-6 flex items-center text-2xl font-bold">
+        <Image src={logo} alt="Froggy Logo" width={30} height={30} className="ml-2" />
         <span>Froggy Whitelist</span>
       </div>
 
-      {loading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm z-50"
+      {/* Theme Toggle Button */}
+      <div className="absolute top-6 right-6">
+        <motion.button
+          onClick={toggleTheme}
+          className={`p-2 rounded-full ${
+            theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+          }`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-            className="relative w-24 h-24 mb-6"
-          >
-            <Image
-              src="/logo.png"
-              alt="Froggy Spinner"
-              width={96}
-              height={96}
-              className="rounded-full border-4 border-green-500 shadow-lg"
-            />
-          </motion.div>
-          <motion.p
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-2xl font-bold text-white"
-          >
-            Ribbit! Hopping to your form...
-          </motion.p>
-        </motion.div>
-      )}
+          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+        </motion.button>
+      </div>
 
-      <div className="w-full max-w-md relative">
-        <div className="absolute top-[-60px] left-0 w-full h-32 lg:hidden z-10">
+      {/* Main Content */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`w-full max-w-5xl ${
+          theme === "dark" ? "bg-gray-800/80 border-gray-700" : "bg-white/80 border-gray-200"
+        } p-8 rounded-2xl shadow-2xl border flex flex-col lg:flex-row backdrop-blur-sm`}
+      >
+        <div className="lg:w-1/2 hidden lg:flex items-center justify-center">
           <Image
-            src={frogJumpImage}
-            alt="Frog Jumping"
-            fill
-            className="object-cover object-center"
+            src={formSideImage}
+            alt="Froggy Side"
+            width={500}
+            height={500}
+            className="w-full h-auto object-cover"
           />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative bg-gray-900 p-8 rounded-2xl shadow-2xl border border-gray-500 mt-16 lg:mt-0"
-        >
-          <h2 className="text-3xl font-bold text-white text-center mb-6 flex items-center justify-center">
-            Froggy Login
-            <Image src="/logo.png" alt="Froggy Logo" width={30} height={30} className="ml-2" />
-          </h2>
-
-          <p className="text-gray-300 text-center mb-6">Hop in with your Twitter account!</p>
-
-          <button
-            onClick={handleLogin}
-            disabled={loading || status === "authenticated"}
-            aria-label="Login with Twitter"
-            className="w-full py-3 px-4 rounded-lg bg-blue-500 text-white font-semibold flex items-center justify-center gap-2 transition transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+        <div className="lg:w-1/2 w-full flex flex-col justify-center items-center">
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-4xl font-bold mb-6 flex items-center"
           >
-            <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
+            Login
+            <Image src={logo} alt="Logo" width={40} height={40} className="ml-2" />
+          </motion.h1>
+
+          <motion.button
+            onClick={handleLogin}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className={`w-full max-w-xs py-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-blue-500 hover:bg-blue-600"
+            } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none flex items-center justify-center gap-2`}
+          >
+            <Image src="/x-logo.png" alt="X Logo" width={24} height={24} />
             Login with Twitter
-          </button>
-        </motion.div>
-      </div>
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Footer */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="absolute bottom-4 text-sm"
+      >
+        © 2025 Froggy Folios
+      </motion.p>
     </div>
   );
 }

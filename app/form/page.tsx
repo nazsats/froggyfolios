@@ -16,14 +16,28 @@ type FormStatus = "Pending" | "Under Review" | "Approved" | "Rejected" | null;
 export default function TaskForm() {
   const [wallet, setWallet] = useState("");
   const [message, setMessage] = useState("");
-  const [walletError, setWalletError] = useState(""); // New state for wallet error message
+  const [walletError, setWalletError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [showStatusPopup, setShowStatusPopup] = useState(false);
   const [formStatus, setFormStatus] = useState<FormStatus>(null);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  // Load theme from local storage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
+    setTheme(savedTheme || "dark");
+  }, []);
+
+  // Save theme to local storage
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
 
   useEffect(() => {
     if (status === "loading") return;
@@ -154,7 +168,7 @@ export default function TaskForm() {
       case "Approved":
       case "Rejected":
         return 100;
-      default: // "Pending", "Under Review", null
+      default:
         return 69;
     }
   };
@@ -172,7 +186,13 @@ export default function TaskForm() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-blue-500 via-purple-500 via-pink-500 to-yellow-500">
+      <div
+        className={`min-h-screen flex flex-col items-center justify-center ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-green-800 via-blue-800 via-purple-800 via-pink-800 to-yellow-800 text-white"
+            : "bg-gradient-to-br from-green-300 via-blue-300 via-purple-300 via-pink-300 to-yellow-300 text-gray-900"
+        }`}
+      >
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
@@ -190,7 +210,7 @@ export default function TaskForm() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-2xl font-bold text-white"
+          className="text-2xl font-bold"
         >
           Ribbit! Loading...
         </motion.p>
@@ -203,10 +223,30 @@ export default function TaskForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-green-500 via-blue-500 via-purple-500 via-pink-500 to-yellow-500 relative font-sans">
-      <div className="absolute top-6 left-6 flex items-center text-white text-2xl font-bold">
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center px-4 ${
+        theme === "dark"
+          ? "bg-gradient-to-br from-green-800 via-blue-800 via-purple-800 via-pink-800 to-yellow-800 text-white"
+          : "bg-gradient-to-br from-green-300 via-blue-300 via-purple-300 via-pink-300 to-yellow-300 text-gray-900"
+      }`}
+    >
+      <div className="absolute top-6 left-6 flex items-center text-2xl font-bold">
         <Image src="/logo.png" alt="Froggy Logo" width={30} height={30} className="ml-2" />
         <span>Froggy Whitelist</span>
+      </div>
+
+      {/* Theme Toggle Button */}
+      <div className="absolute top-6 right-6">
+        <motion.button
+          onClick={toggleTheme}
+          className={`p-2 rounded-full ${
+            theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+          }`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+        </motion.button>
       </div>
 
       {loading && (
@@ -233,7 +273,7 @@ export default function TaskForm() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-2xl font-bold text-white"
+            className="text-2xl font-bold"
           >
             Ribbit! Submitting your form...
           </motion.p>
@@ -245,14 +285,16 @@ export default function TaskForm() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative bg-gray-900 p-8 rounded-2xl shadow-2xl border border-gray-500 flex flex-col lg:flex-row mt-16 lg:mt-0 z-20"
+          className={`relative ${
+            theme === "dark" ? "bg-gray-800/80 border-gray-700" : "bg-white/80 border-gray-200"
+          } p-8 rounded-2xl shadow-2xl border flex flex-col lg:flex-row mt-16 lg:mt-0 z-20 backdrop-blur-sm`}
         >
           <div className="lg:w-1/2 hidden lg:flex items-center justify-center">
             <Image src={formSideImage} alt="Form Side" width={500} height={500} className="w-full h-auto object-cover" />
           </div>
 
           <div className="lg:w-1/2 w-full flex flex-col justify-center items-center">
-            <h2 className="text-3xl font-bold text-white text-center mb-6 flex items-center">
+            <h2 className="text-3xl font-bold text-center mb-6 flex items-center">
               Froggy Form
               <Image src="/logo.png" alt="Logo" width={30} height={30} className="ml-2" />
             </h2>
@@ -260,7 +302,9 @@ export default function TaskForm() {
               <div className="space-y-6 w-full max-w-md">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label className="block text-gray-300 mb-2">Submit your Bitcoin wallet address</label>
+                    <label className={`${theme === "dark" ? "text-gray-300" : "text-gray-700"} block mb-2`}>
+                      Submit your Bitcoin wallet address
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter your wallet (bc1p...)"
@@ -270,7 +314,11 @@ export default function TaskForm() {
                         validateWallet(e.target.value);
                       }}
                       required
-                      className="w-full p-3 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-700 transition-all duration-300"
+                      className={`w-full p-3 rounded-lg ${
+                        theme === "dark"
+                          ? "bg-gray-700 text-white border-gray-600 placeholder-gray-400"
+                          : "bg-gray-100 text-gray-900 border-gray-300 placeholder-gray-500"
+                      } focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
                     />
                     {walletError && (
                       <motion.p
@@ -284,13 +332,19 @@ export default function TaskForm() {
                   </div>
 
                   <div>
-                    <label className="block text-gray-300 mb-2">Your Message</label>
+                    <label className={`${theme === "dark" ? "text-gray-300" : "text-gray-700"} block mb-2`}>
+                      Your Message
+                    </label>
                     <textarea
                       placeholder="Why you love frogs?"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       required
-                      className="w-full p-3 h-24 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-700 transition-all duration-300"
+                      className={`w-full p-3 h-24 rounded-lg ${
+                        theme === "dark"
+                          ? "bg-gray-700 text-white border-gray-600 placeholder-gray-400"
+                          : "bg-gray-100 text-gray-900 border-gray-300 placeholder-gray-500"
+                      } focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
                     />
                   </div>
 
@@ -298,7 +352,11 @@ export default function TaskForm() {
                     href={`https://twitter.com/intent/tweet?text=RIBBIT !!! RIBBIT !!! RIBBIT !!!%0A%0AJUST APPLIED FOR @FroggyFolios WL`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-blue-400 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 focus:outline-none"
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg ${
+                      theme === "dark"
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
                   >
                     <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
                     Share on X
@@ -307,14 +365,22 @@ export default function TaskForm() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 rounded-lg bg-green-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full py-3 rounded-lg ${
+                      theme === "dark"
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-green-500 hover:bg-green-600"
+                    } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     Submit
                   </button>
                 </form>
                 <motion.button
                   onClick={handleSignOut}
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 focus:outline-none"
+                  className={`w-full py-3 rounded-lg ${
+                    theme === "dark"
+                      ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                      : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                  } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -323,11 +389,15 @@ export default function TaskForm() {
               </div>
             ) : (
               <div className="text-center space-y-4">
-                <p className="text-white text-lg font-semibold mb-4">✅ You have already submitted your task.</p>
+                <p className="text-lg font-semibold mb-4">✅ You have already submitted your task.</p>
                 <div className="flex flex-col gap-4">
                   <motion.button
                     onClick={handleCheckStatus}
-                    className="py-2 px-6 rounded-lg bg-blue-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 focus:outline-none"
+                    className={`py-2 px-6 rounded-lg ${
+                      theme === "dark"
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -335,7 +405,11 @@ export default function TaskForm() {
                   </motion.button>
                   <motion.button
                     onClick={handleSignOut}
-                    className="py-2 px-6 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 focus:outline-none"
+                    className={`py-2 px-6 rounded-lg ${
+                      theme === "dark"
+                        ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                        : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                    } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -355,7 +429,11 @@ export default function TaskForm() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="max-w-md w-full p-8 bg-gradient-to-br from-green-500 via-white to-blue-100 rounded-2xl shadow-2xl border border-gray-200 relative overflow-hidden flex flex-col items-center justify-center"
+            className={`max-w-md w-full p-8 ${
+              theme === "dark"
+                ? "bg-gradient-to-br from-green-700 via-blue-700 to-purple-700"
+                : "bg-gradient-to-br from-green-200 via-blue-200 to-purple-200"
+            } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-hidden flex flex-col items-center justify-center`}
           >
             <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
             <motion.div
@@ -370,8 +448,10 @@ export default function TaskForm() {
                 className="drop-shadow-lg"
               />
             </motion.div>
-            <h3 className="text-3xl font-bold text-gray-800 mb-2 text-center">Ribbit! Success!</h3>
-            <p className="text-gray-600 text-lg mb-4 text-center">
+            <h3 className={`text-3xl font-bold mb-2 text-center ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+              Ribbit! Success!
+            </h3>
+            <p className={`text-lg mb-4 text-center ${theme === "dark" ? "text-gray-200" : "text-gray-600"}`}>
               Your form has been submitted and is{" "}
               <span className="inline-flex items-center">
                 <span className="text-green-600 font-extrabold italic">under</span>
@@ -380,7 +460,9 @@ export default function TaskForm() {
             </p>
             <motion.button
               onClick={handleTwitterFollow}
-              className="px-8 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mb-4"
+              className={`px-8 py-2 ${
+                theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+              } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2 mb-4`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -389,7 +471,9 @@ export default function TaskForm() {
             </motion.button>
             <button
               onClick={() => setShowPopup(false)}
-              className="px-8 py-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-all shadow-md hover:shadow-lg"
+              className={`px-8 py-2 ${
+                theme === "dark" ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"
+              } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
             >
               Close
             </button>
@@ -405,7 +489,11 @@ export default function TaskForm() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
-            className="max-w-md w-full p-8 bg-gradient-to-br from-purple-100 via-blue-100 to-green-100 rounded-3xl shadow-2xl border border-gray-300 flex flex-col items-center justify-center relative overflow-hidden"
+            className={`max-w-md w-full p-8 ${
+              theme === "dark"
+                ? "bg-gradient-to-br from-purple-800 via-blue-800 to-green-800"
+                : "bg-gradient-to-br from-purple-200 via-blue-200 to-green-200"
+            } rounded-3xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} flex flex-col items-center justify-center relative overflow-hidden`}
           >
             <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-5 pointer-events-none" />
             <h3
@@ -435,7 +523,6 @@ export default function TaskForm() {
 
             <div className="w-full mb-8">
               <div className="flex justify-between mb-4 text-center">
-                {/* Progress Bar Emojis Above */}
                 <div>
                   {formStatus === "Pending" ? (
                     <motion.div
@@ -512,7 +599,6 @@ export default function TaskForm() {
                   <span className="text-sm font-bold text-green-600">Approved/Rejected</span>
                 </div>
               </div>
-              {/* Progress Bar with Percentage Inside */}
               <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
@@ -533,7 +619,9 @@ export default function TaskForm() {
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-lg text-blue-700 font-semibold mb-6 text-center"
+                className={`text-lg font-semibold mb-6 text-center ${
+                  theme === "dark" ? "text-blue-300" : "text-blue-700"
+                }`}
               >
                 Your form is currently{" "}
                 <span className="text-blue-500 font-extrabold italic">Under Review</span>!
@@ -558,14 +646,18 @@ export default function TaskForm() {
                   />
                 </motion.div>
                 <p className="text-2xl font-bold text-green-600 mb-2">Successfully Approved!</p>
-                <p className="text-lg text-green-700 mb-4">
+                <p className={`text-lg mb-4 ${theme === "dark" ? "text-green-300" : "text-green-700"}`}>
                   Congratulations, you are eligible for Froggy WL!
                 </p>
                 <a
                   href={`https://twitter.com/intent/tweet?text=RIBBIT !!! RIBBIT !!!%0A%0AI GOT APPROVED FOR @FroggyFolios WL!`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg bg-blue-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 mb-4"
+                  className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg ${
+                    theme === "dark"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg mb-4`}
                 >
                   <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
                   Share on X
@@ -591,13 +683,17 @@ export default function TaskForm() {
                   />
                 </motion.div>
                 <p className="text-2xl font-bold text-red-600 mb-2">Sorry, Rejected</p>
-                <p className="text-lg text-red-700 mb-6">Try again later.</p>
+                <p className={`text-lg mb-6 ${theme === "dark" ? "text-red-300" : "text-red-700"}`}>
+                  Try again later.
+                </p>
               </motion.div>
             )}
 
             <motion.button
               onClick={handleTwitterFollow}
-              className="px-8 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mb-4"
+              className={`px-8 py-2 ${
+                theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+              } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2 mb-4`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -606,7 +702,9 @@ export default function TaskForm() {
             </motion.button>
             <button
               onClick={() => setShowStatusPopup(false)}
-              className="px-8 py-2 bg-red-200 text-red-800 rounded-full font-semibold hover:bg-red-300 transition-all shadow-md hover:shadow-lg"
+              className={`px-8 py-2 ${
+                theme === "dark" ? "bg-red-600 hover:bg-red-700" : "bg-red-200 hover:bg-red-300"
+              } ${theme === "dark" ? "text-white" : "text-red-800"} rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
             >
               Close
             </button>

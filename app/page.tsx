@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import formSideImage from "@/public/form-side.png";
@@ -11,10 +11,24 @@ export default function Home() {
   const [result, setResult] = useState({ message: "", color: "#ffffff" });
   const [showPopup, setShowPopup] = useState(false);
   const [whitelistType, setWhitelistType] = useState(null); // "gtdFreeMint", "fcfsWL", or null
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  // Load theme from local storage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
+    setTheme(savedTheme || "dark");
+  }, []);
+
+  // Save theme to local storage
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
 
   const checkWhitelist = async () => {
     if (!walletAddress.trim()) {
-      setResult({ message: "Please enter a wallet address", color: "#ffff00" });
+      setResult({ message: "Please enter a wallet address", color: theme === "dark" ? "#ffff00" : "#ffaa00" });
       return;
     }
 
@@ -24,7 +38,7 @@ export default function Home() {
     }
 
     try {
-      setResult({ message: "Checking...", color: "#ffffff" });
+      setResult({ message: "Checking...", color: theme === "dark" ? "#ffffff" : "#000000" });
       const response = await fetch("/api/checkWhitelist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,10 +67,31 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-green-500 via-blue-500 via-purple-500 via-pink-500 to-yellow-500 relative font-sans">
-      <div className="absolute top-6 left-6 flex items-center text-white text-2xl font-bold">
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center px-4 ${
+        theme === "dark"
+          ? "bg-gradient-to-br from-green-800 via-blue-800 via-purple-800 via-pink-800 to-yellow-800 text-white"
+          : "bg-gradient-to-br from-green-300 via-blue-300 via-purple-300 via-pink-300 to-yellow-300 text-gray-900"
+      } relative font-sans`}
+    >
+      {/* Top Left Logo */}
+      <div className="absolute top-6 left-6 flex items-center text-2xl font-bold">
         <Image src="/logo.png" alt="Froggy Logo" width={30} height={30} className="ml-2" />
         <span>Froggy Folios</span>
+      </div>
+
+      {/* Theme Toggle Button */}
+      <div className="absolute top-6 right-6">
+        <motion.button
+          onClick={toggleTheme}
+          className={`p-2 rounded-full ${
+            theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+          }`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+        </motion.button>
       </div>
 
       <div className="w-full max-w-5xl relative z-0">
@@ -64,7 +99,9 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative bg-gray-900 p-8 rounded-2xl shadow-2xl border border-gray-500 flex flex-col lg:flex-row mt-16 lg:mt-0 z-20"
+          className={`relative ${
+            theme === "dark" ? "bg-gray-800/80 border-gray-700" : "bg-white/80 border-gray-200"
+          } p-8 rounded-2xl shadow-2xl border flex flex-col lg:flex-row mt-16 lg:mt-0 z-20 backdrop-blur-sm`}
         >
           <div className="lg:w-1/2 hidden lg:flex items-center justify-center">
             <Image
@@ -77,7 +114,7 @@ export default function Home() {
           </div>
 
           <div className="lg:w-1/2 w-full flex flex-col justify-center items-center">
-            <h1 className="text-3xl font-bold text-white text-center mb-6 flex items-center">
+            <h1 className="text-3xl font-bold text-center mb-6 flex items-center">
               Whitelist Checker
               <Image src="/logo.png" alt="Logo" width={30} height={30} className="ml-2" />
             </h1>
@@ -87,14 +124,22 @@ export default function Home() {
                 placeholder="Enter Bitcoin Taproot address (bc1p...)"
                 value={walletAddress}
                 onChange={(e) => setWalletAddress(e.target.value)}
-                className="w-full p-3 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-700 transition-all duration-300"
+                className={`w-full p-3 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-white border-gray-600 placeholder-gray-400"
+                    : "bg-gray-200 text-gray-900 border-gray-300 placeholder-gray-500"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.3 }}
               />
               <motion.button
                 onClick={checkWhitelist}
-                className="w-full py-3 rounded-lg bg-green-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/50 focus:outline-none"
+                className={`w-full py-3 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-green-500 hover:bg-green-600"
+                } text-white font-semibold transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -102,7 +147,11 @@ export default function Home() {
               </motion.button>
               <motion.a
                 href="/login"
-                className="block w-full py-3 rounded-lg bg-blue-500 text-white font-semibold text-center transition transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 focus:outline-none"
+                className={`block w-full py-3 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-blue-500 hover:bg-blue-600"
+                } text-white font-semibold text-center transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -126,12 +175,15 @@ export default function Home() {
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
           {whitelistType === "gtdFreeMint" ? (
-            // GTD Free Mint Popup with stareye.png (bigger)
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="max-w-md w-full p-8 bg-gradient-to-br from-yellow-300 via-green-400 to-blue-500 rounded-2xl shadow-2xl border border-yellow-500 relative overflow-hidden flex flex-col items-center justify-center"
+              className={`max-w-md w-full p-8 ${
+                theme === "dark"
+                  ? "bg-gradient-to-br from-yellow-700 via-green-700 to-blue-700"
+                  : "bg-gradient-to-br from-yellow-300 via-green-300 to-blue-300"
+              } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-hidden flex flex-col items-center justify-center`}
             >
               <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-20 pointer-events-none" />
               <motion.div
@@ -141,8 +193,8 @@ export default function Home() {
                 <Image
                   src="/emojis/stareye.png"
                   alt="Stareye Frog"
-                  width={300}  // Increased from 80px
-                  height={300} // Increased from 80px
+                  width={300}
+                  height={300}
                   className="drop-shadow-lg"
                 />
               </motion.div>
@@ -150,7 +202,9 @@ export default function Home() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-3xl font-extrabold text-white mb-2 text-center drop-shadow-md"
+                className={`text-3xl font-extrabold mb-2 text-center ${
+                  theme === "dark" ? "text-white" : "text-gray-800"
+                } drop-shadow-md`}
               >
                 Ribbit! VIP Status!
               </motion.h3>
@@ -158,13 +212,19 @@ export default function Home() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="text-white text-lg mb-4 text-center font-semibold drop-shadow-md"
+                className={`text-lg mb-4 text-center font-semibold ${
+                  theme === "dark" ? "text-gray-200" : "text-gray-600"
+                } drop-shadow-md`}
               >
                 You’re eligible for GTD Free Mint!
               </motion.p>
               <motion.button
                 onClick={() => setShowPopup(false)}
-                className="px-8 py-2 bg-yellow-500 text-black rounded-full font-semibold hover:bg-yellow-600 transition-all shadow-md hover:shadow-lg"
+                className={`px-8 py-2 ${
+                  theme === "dark"
+                    ? "bg-yellow-600 hover:bg-yellow-700 text-black"
+                    : "bg-yellow-400 hover:bg-yellow-500 text-black"
+                } rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -173,12 +233,15 @@ export default function Home() {
               <Confetti recycle={false} numberOfPieces={300} colors={["#FFD700", "#00FF00", "#FFFFFF"]} />
             </motion.div>
           ) : whitelistType === "fcfsWL" ? (
-            // FCFS WL Popup with stareye.png (bigger)
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="max-w-md w-full p-8 bg-gradient-to-br from-gray-200 via-blue-100 to-gray-300 rounded-2xl shadow-2xl border border-gray-400 relative overflow-hidden flex flex-col items-center justify-center"
+              className={`max-w-md w-full p-8 ${
+                theme === "dark"
+                  ? "bg-gradient-to-br from-gray-700 via-blue-700 to-gray-700"
+                  : "bg-gradient-to-br from-gray-200 via-blue-200 to-gray-200"
+              } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-hidden flex flex-col items-center justify-center`}
             >
               <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
               <motion.div
@@ -188,8 +251,8 @@ export default function Home() {
                 <Image
                   src="/emojis/stareye.png"
                   alt="Stareye Frog"
-                  width={300}  // Increased from 64px
-                  height={300} // Increased from 64px
+                  width={300}
+                  height={300}
                   className="drop-shadow-lg"
                 />
               </motion.div>
@@ -197,7 +260,9 @@ export default function Home() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-2xl font-bold text-gray-800 mb-2 text-center"
+                className={`text-2xl font-bold mb-2 text-center ${
+                  theme === "dark" ? "text-white" : "text-gray-800"
+                }`}
               >
                 Ribbit! You’re In!
               </motion.h3>
@@ -205,13 +270,17 @@ export default function Home() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="text-gray-600 text-lg mb-4 text-center"
+                className={`text-lg mb-4 text-center ${
+                  theme === "dark" ? "text-gray-200" : "text-gray-600"
+                }`}
               >
                 You’re eligible for FCFS Whitelist!
               </motion.p>
               <motion.button
                 onClick={() => setShowPopup(false)}
-                className="px-8 py-2 bg-blue-400 text-white rounded-full font-semibold hover:bg-blue-500 transition-all shadow-md hover:shadow-lg"
+                className={`px-8 py-2 ${
+                  theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+                } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -220,12 +289,15 @@ export default function Home() {
               <Confetti recycle={false} numberOfPieces={100} colors={["#1E90FF", "#87CEEB"]} />
             </motion.div>
           ) : (
-            // Failure Popup with cry.png (bigger)
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="max-w-md w-full p-8 bg-gradient-to-br from-red-100 via-white to-gray-100 rounded-2xl shadow-2xl border border-gray-200 relative overflow-hidden flex flex-col items-center justify-center"
+              className={`max-w-md w-full p-8 ${
+                theme === "dark"
+                  ? "bg-gradient-to-br from-red-700 via-gray-800 to-gray-700"
+                  : "bg-gradient-to-br from-red-100 via-white to-gray-100"
+              } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-hidden flex flex-col items-center justify-center`}
             >
               <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
               <motion.div
@@ -235,16 +307,22 @@ export default function Home() {
                 <Image
                   src="/emojis/cry.png"
                   alt="Cry Frog"
-                  width={300}  // Increased from 64px
-                  height={300} // Increased from 64px
+                  width={300}
+                  height={300}
                   className="drop-shadow-lg"
                 />
               </motion.div>
-              <h3 className="text-3xl font-bold text-gray-800 mb-2 text-center">Ribbit! Sorry!</h3>
-              <p className="text-gray-600 text-lg mb-4 text-center">You’re not on the whitelist yet.</p>
+              <h3 className={`text-3xl font-bold mb-2 text-center ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+                Ribbit! Sorry!
+              </h3>
+              <p className={`text-lg mb-4 text-center ${theme === "dark" ? "text-gray-200" : "text-gray-600"}`}>
+                You’re not on the whitelist yet.
+              </p>
               <motion.button
                 onClick={handleTwitterFollow}
-                className="px-8 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                className={`px-8 py-2 ${
+                  theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+                } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -253,7 +331,11 @@ export default function Home() {
               </motion.button>
               <motion.button
                 onClick={() => setShowPopup(false)}
-                className="mt-4 px-8 py-2 bg-gray-200 text-gray-800 rounded-full font-semibold hover:bg-gray-300 transition-all shadow-md hover:shadow-lg"
+                className={`mt-4 px-8 py-2 ${
+                  theme === "dark"
+                    ? "bg-gray-600 hover:bg-gray-700 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                } rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -268,7 +350,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.8 }}
-        className="absolute bottom-4 text-white text-sm"
+        className="absolute bottom-4 text-sm"
       >
         © 2025 Froggy Folios
       </motion.p>
