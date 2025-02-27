@@ -14,7 +14,7 @@ declare module "next-auth" {
     };
   }
   interface Profile {
-    username?: string; // For OAuth 2.0 direct structure
+    username?: string;
     data?: {
       username: string;
       id: string;
@@ -38,49 +38,52 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, profile }) {
-      console.log("SignIn Start - User:", user);
-      console.log("SignIn Start - Profile:", JSON.stringify(profile, null, 2)); // Full profile log
-      const twitterUsername = profile?.data?.username || profile?.username; // Try both structures
+      console.log("SignIn Start - User:", JSON.stringify(user, null, 2));
+      console.log("SignIn Start - Profile:", JSON.stringify(profile, null, 2));
+      
+      // Try multiple ways to extract username
+      const twitterUsername = profile?.data?.username || profile?.username || user?.twitter_username;
       console.log("Extracted Twitter Username:", twitterUsername);
 
       if (!twitterUsername) {
-        console.error("No Twitter username found in profile.data or profile.username");
+        console.error("No Twitter username found in profile.data, profile.username, or user.twitter_username");
         return false; // Triggers AccessDenied
       }
 
       try {
-        console.log("Attempting Supabase upsert for user:", user.id);
+        console.log("Attempting Supabase upsert for user:", user.id, "with username:", twitterUsername);
         const { data, error } = await supabaseAdmin.from("users").upsert([
           { id: user.id, twitter_username: twitterUsername },
-        ]);
+        ], { onConflict: ["id"] }); // Ensure upsert updates existing records
+
         if (error) {
-          console.error("Supabase Insert Error:", error);
+          console.error("Supabase Insert Error:", JSON.stringify(error, null, 2));
           return false;
         }
-        console.log("Supabase Insert Success:", data);
+        console.log("Supabase Insert Success:", JSON.stringify(data, null, 2));
         return true;
       } catch (err) {
-        console.error("SignIn Unexpected Error:", err instanceof Error ? err.message : err);
+        console.error("SignIn Unexpected Error:", err instanceof Error ? err.message : JSON.stringify(err, null, 2));
         return false;
       }
     },
     async session({ session, token }) {
-      console.log("Session Callback - Token:", token);
+      console.log("Session Callback - Token:", JSON.stringify(token, null, 2));
       try {
         const { data, error } = await supabaseAdmin
           .from("users")
           .select("twitter_username")
           .eq("id", token.sub)
           .single();
-        if (error) console.error("Supabase Select Error:", error);
+        if (error) console.error("Supabase Select Error:", JSON.stringify(error, null, 2));
         session.customUser = {
           id: token.sub!,
           twitter_username: data?.twitter_username,
         };
-        console.log("Session Callback - Session:", session);
+        console.log("Session Callback - Session:", JSON.stringify(session, null, 2));
         return session;
       } catch (err) {
-        console.error("Session Error:", err instanceof Error ? err.message : err);
+        console.error("Session Error:", err instanceof Error ? err.message : JSON.stringify(err, null, 2));
         session.customUser = { id: token.sub!, twitter_username: undefined };
         return session;
       }
