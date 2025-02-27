@@ -14,6 +14,7 @@ declare module "next-auth" {
     };
   }
   interface Profile {
+    username?: string; // For OAuth 2.0 direct structure
     data?: {
       username: string;
       id: string;
@@ -38,15 +39,13 @@ const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, profile }) {
       console.log("SignIn Start - User:", user);
-      console.log("SignIn Start - Profile:", profile);
-
-      // Use profile.data.username based on logs
-      const twitterUsername = profile?.data?.username as string;
+      console.log("SignIn Start - Profile:", JSON.stringify(profile, null, 2)); // Full profile log
+      const twitterUsername = profile?.data?.username || profile?.username; // Try both structures
       console.log("Extracted Twitter Username:", twitterUsername);
 
       if (!twitterUsername) {
-        console.error("No Twitter username found in profile.data");
-        return false;
+        console.error("No Twitter username found in profile.data or profile.username");
+        return false; // Triggers AccessDenied
       }
 
       try {
