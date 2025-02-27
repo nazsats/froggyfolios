@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
@@ -12,18 +12,19 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Confetti from "react-confetti";
 
+type FormStatus = "Pending" | "Under Review" | "Approved" | "Rejected" | null;
+
 export default function TaskForm() {
   const [wallet, setWallet] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [showStatusPopup, setShowStatusPopup] = useState(false);
-  const [formStatus, setFormStatus] = useState(null);
+  const [formStatus, setFormStatus] = useState<FormStatus>(null);
 
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect to /login if not authenticated
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") {
@@ -32,65 +33,96 @@ export default function TaskForm() {
     }
   }, [status, router]);
 
-  // Check existing submission only if authenticated
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
-      console.log("Session Data:", session);
-      checkExistingSubmission();
-    }
-  }, [session, status]);
-
-  const checkExistingSubmission = async () => {
-    console.log("Checking submission for twitter_id:", session?.user?.id);
+  const checkExistingSubmission = useCallback(async () => {
+    console.log("Checking submission for twitter_id:", session?.customUser?.id);
     const { data, error } = await supabase
       .from("tasks")
       .select("status")
-      .eq("twitter_id", session?.user?.id)
+      .eq("twitter_id", session?.customUser?.id)
       .limit(1);
 
     if (error) {
       console.error("Supabase error in checkExistingSubmission:", error.message || error);
     } else if (!data || data.length === 0) {
-      console.log("No existing submission found for twitter_id:", session?.user?.id);
+      console.log("No existing submission found for twitter_id:", session?.customUser?.id);
       setFormStatus(null);
     } else {
       console.log("Submission status found:", data[0].status);
       setFormStatus(data[0].status);
     }
-  };
+  }, [session?.customUser?.id]);
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if (status === "authenticated" && session?.customUser?.id) {
+      console.log("Session Data:", session);
+      checkExistingSubmission();
+    }
+  }, [session, status, checkExistingSubmission]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleSubmit triggered");
     setLoading(true);
 
     if (formStatus) {
+      console.log("Form already submitted, status:", formStatus);
       toast.error("You have already submitted the form!");
       setLoading(false);
       return;
     }
 
+    if (!wallet.startsWith("bc1p")) {
+      console.log("Invalid wallet address:", wallet);
+      toast.error("Please enter a valid Bitcoin Taproot address (must start with 'bc1p')");
+      setLoading(false);
+      return;
+    }
+
     console.log("Session Data in handleSubmit:", session);
-    const twitterUsername = session?.user?.twitterusername || `user_${session?.user?.id}`;
+    if (!session || !session.customUser) {
+      console.error("Session or customUser missing");
+      toast.error("Session not available. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+
+    const twitterUsername = session.customUser.twitter_username || `user_${session.customUser.id}`;
     console.log("Inserting twitterUsername:", twitterUsername);
 
-    const { error } = await supabase.from("tasks").insert([
-      {
-        twitter_id: session.user.id,
+    try {
+      console.log("Attempting Supabase insert with data:", {
+        twitter_id: session.customUser.id,
         twitterusername: twitterUsername,
         wallet,
         message,
         status: "Pending",
-      },
-    ]);
+      });
+      const { data, error } = await supabase.from("tasks").insert([
+        {
+          twitter_id: session.customUser.id,
+          twitterusername: twitterUsername,
+          wallet,
+          message,
+          status: "Pending",
+        },
+      ]);
 
-    setLoading(false);
-    if (!error) {
+      if (error) {
+        console.error("Supabase Insert Error:", error);
+        toast.error(`Failed to submit: ${error.message}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log("Submission successful, inserted data:", data);
       setShowPopup(true);
       toast.success("🎉 Form submitted successfully!", { position: "top-center" });
       await checkExistingSubmission();
-    } else {
-      toast.error("Something went wrong. Please try again!");
-      console.error("Supabase Insert Error:", error);
+    } catch (err) {
+      console.error("Unexpected error in handleSubmit:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,7 +131,9 @@ export default function TaskForm() {
     setShowStatusPopup(true);
   };
 
+  // Define handleSignOut
   const handleSignOut = () => {
+    console.log("handleSignOut triggered"); // Debug
     signOut({ callbackUrl: "/login" });
   };
 
@@ -248,7 +282,7 @@ export default function TaskForm() {
                   </button>
                 </form>
                 <motion.button
-                  onClick={handleSignOut}
+                  onClick={handleSignOut} // Use the defined function
                   className="w-full py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 focus:outline-none"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -269,7 +303,7 @@ export default function TaskForm() {
                     Check Status
                   </motion.button>
                   <motion.button
-                    onClick={handleSignOut}
+                    onClick={handleSignOut} // Use the defined function
                     className="py-2 px-6 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold transition transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 focus:outline-none"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -286,8 +320,8 @@ export default function TaskForm() {
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
             className="max-w-md w-full p-8 bg-gradient-to-br from-green-500 via-white to-blue-100 rounded-2xl shadow-2xl border border-gray-200 relative overflow-hidden flex flex-col items-center justify-center"
           >

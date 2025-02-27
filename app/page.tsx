@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
-import styles from "@/styles/home.module.css";
 import formSideImage from "@/public/form-side.png";
 import Confetti from "react-confetti";
 

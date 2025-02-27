@@ -1,47 +1,92 @@
-import NextAuth from "next-auth";
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth, { NextAuthOptions } from "next-auth";
 import TwitterProvider from "next-auth/providers/twitter";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-console.log("✅ Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("✅ Supabase Role Key:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "Loaded" : "Not Found");
+declare module "next-auth" {
+  interface User {
+    twitter_username?: string;
+  }
+  interface Session {
+    customUser: {
+      id: string;
+      twitter_username?: string;
+    };
+  }
+  interface Profile {
+    data?: {
+      username: string;
+      id: string;
+      name: string;
+      profile_image_url?: string;
+    };
+  }
+}
 
-export const authOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     TwitterProvider({
       clientId: process.env.TWITTER_CLIENT_ID!,
       clientSecret: process.env.TWITTER_CLIENT_SECRET!,
       version: "2.0",
-      profile(profile) {
-        console.log("Twitter Profile Data:", profile);
-        return {
-          id: profile.data.id,
-          username: profile.data.username, // Twitter handle
-          name: profile.data.name,
-        };
-      },
+      authorization: { url: "https://twitter.com/i/oauth2/authorize", params: { scope: "tweet.read users.read" } },
     }),
   ],
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    async signIn({ user }) {
-      console.log("User signing in:", user);
-      const { error } = await supabaseAdmin.from("users").upsert([
-        {
-          id: user.id,
-          twitter_username: user.username,
-        },
-      ]);
-      if (error) console.error("🚨 Supabase Insert Error:", error);
-      return true;
+    async signIn({ user, profile }) {
+      console.log("SignIn Start - User:", user);
+      console.log("SignIn Start - Profile:", profile);
+
+      // Use profile.data.username based on logs
+      const twitterUsername = profile?.data?.username as string;
+      console.log("Extracted Twitter Username:", twitterUsername);
+
+      if (!twitterUsername) {
+        console.error("No Twitter username found in profile.data");
+        return false;
+      }
+
+      try {
+        console.log("Attempting Supabase upsert for user:", user.id);
+        const { data, error } = await supabaseAdmin.from("users").upsert([
+          { id: user.id, twitter_username: twitterUsername },
+        ]);
+        if (error) {
+          console.error("Supabase Insert Error:", error);
+          return false;
+        }
+        console.log("Supabase Insert Success:", data);
+        return true;
+      } catch (err) {
+        console.error("SignIn Unexpected Error:", err instanceof Error ? err.message : err);
+        return false;
+      }
     },
     async session({ session, token }) {
-      console.log("Token:", token);
-      session.user.id = token.sub;
-      session.user.twitterusername = token.username; // Ensure this is set
-      session.expires = token.exp || session.expires;
-      return session;
+      console.log("Session Callback - Token:", token);
+      try {
+        const { data, error } = await supabaseAdmin
+          .from("users")
+          .select("twitter_username")
+          .eq("id", token.sub)
+          .single();
+        if (error) console.error("Supabase Select Error:", error);
+        session.customUser = {
+          id: token.sub!,
+          twitter_username: data?.twitter_username,
+        };
+        console.log("Session Callback - Session:", session);
+        return session;
+      } catch (err) {
+        console.error("Session Error:", err instanceof Error ? err.message : err);
+        session.customUser = { id: token.sub!, twitter_username: undefined };
+        return session;
+      }
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

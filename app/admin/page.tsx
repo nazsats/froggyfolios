@@ -1,28 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
+interface Submission {
+  id: number;
+  twitter_id: string;
+  twitterusername?: string;
+  wallet: string;
+  message: string;
+  status: string;
+  twitterUsername: string;
+}
+
 export default function AdminPanel() {
-  const [submissions, setSubmissions] = useState([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedMessages, setExpandedMessages] = useState({});
+  const [expandedMessages, setExpandedMessages] = useState<{ [key: number]: boolean }>({});
   const entriesPerPage = 20;
-  const router = useRouter();
 
-  useEffect(() => {
-    if (authenticated) fetchSubmissions();
-  }, [authenticated, currentPage]);
-
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     const { data: tasksData, error: tasksError } = await supabase
       .from("tasks")
@@ -37,43 +41,47 @@ export default function AdminPanel() {
       return;
     }
 
-    const submissionsWithUsernames = await Promise.all(
-      tasksData.map(async (task) => {
+    const submissionsWithUsernames: Submission[] = await Promise.all(
+      tasksData.map(async (task: any) => {
         const username = await fetchTwitterUsername(task.twitter_id);
         return {
           ...task,
-          twitterUsername: username || `ID_${task.twitter_id}`, // Improved fallback
+          twitterUsername: username || `ID_${task.twitter_id}`,
         };
       })
     );
 
     setSubmissions(submissionsWithUsernames);
     setLoading(false);
-  };
+  }, [currentPage]);
 
-  const fetchTwitterUsername = async (twitterId) => {
+  useEffect(() => {
+    if (authenticated) fetchSubmissions();
+  }, [authenticated, currentPage, fetchSubmissions]);
+
+  const fetchTwitterUsername = async (twitterId: string): Promise<string | null> => {
     try {
       const response = await fetch(`/api/twitterUsername/${twitterId}`);
       const data = await response.json();
       if (response.ok && data.username) {
         return data.username;
       }
-      console.error(`Error fetching username for ID ${twitterId}:`, data.error, data.details);
+      console.error(`Error fetching username for ID ${twitterId}:`, data.error);
       return null;
     } catch (error) {
-      console.error(`Fetch error details for ID ${twitterId}:`, error.message);
+      console.error(`Fetch error for ID ${twitterId}:`, error);
       return null;
     }
   };
 
-  const updateStatus = async (id, newStatus) => {
+  const updateStatus = async (id: number, newStatus: string) => {
     setLoading(true);
     await supabase.from("tasks").update({ status: newStatus }).eq("id", id);
     fetchSubmissions();
     setSelectedSubmission(null);
   };
 
-  const handleDeleteUser = async (id) => {
+  const handleDeleteUser = async (id: number) => {
     if (confirm("Are you sure you want to delete this user?")) {
       setLoading(true);
       await supabase.from("tasks").delete().eq("id", id);
@@ -82,15 +90,26 @@ export default function AdminPanel() {
     }
   };
 
-  const handleAuth = () => {
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-      setAuthenticated(true);
-    } else {
-      alert("Incorrect password");
+  const handleAuth = async () => {
+    try {
+      const response = await fetch("/api/adminAuth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAuthenticated(true);
+      } else {
+        alert("Incorrect password");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+      alert("Something went wrong. Please try again.");
     }
   };
 
-  const handleSearch = async (e) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
@@ -113,7 +132,7 @@ export default function AdminPanel() {
     setLoading(false);
   };
 
-  const toggleMessage = (id) => {
+  const toggleMessage = (id: number) => {
     setExpandedMessages((prev) => ({
       ...prev,
       [id]: !prev[id],
@@ -122,11 +141,10 @@ export default function AdminPanel() {
 
   const totalEntries = submissions.length;
   const totalPages = Math.ceil(totalEntries / entriesPerPage);
-  const startIndex = (currentPage - 1) * entriesPerPage;
-  const endIndex = startIndex + entriesPerPage;
-  const paginatedSubmissions = submissions.slice(startIndex, endIndex);
+  const paginatedSubmissions = submissions;
 
-  const handlePageChange = (newPage) => {
+  // Ensure this is the only definition of handlePageChange
+  const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
