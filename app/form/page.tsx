@@ -425,12 +425,16 @@ export default function TaskForm() {
         style={{ display: showPopup ? "flex" : "none", transition: "none" }}
       >
         <div
-          className={`w-11/12 max-w-md p-6 ${
+          className={`w-11/12 max-w-md p-4 sm:p-6 ${
             theme === "dark"
               ? "bg-gradient-to-br from-green-700 via-blue-700 to-purple-700"
               : "bg-gradient-to-br from-green-200 via-blue-200 to-purple-200"
-          } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-y-auto max-h-[90vh]`}
-          style={{ transition: "none" }}
+          } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-y-auto`}
+          style={{
+            transition: "none",
+            maxHeight: "85vh", // Reduced from 90vh to ensure buttons fit
+            minHeight: "auto", // Allow natural height
+          }}
         >
           <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
           <div className="w-full flex justify-center">
@@ -444,14 +448,22 @@ export default function TaskForm() {
                 width={0}
                 height={0}
                 sizes="100vw"
-                className="w-2/3 max-w-[200px] h-auto drop-shadow-lg"
+                className="w-2/3 max-w-[150px] sm:max-w-[200px] h-auto drop-shadow-lg"
               />
             </motion.div>
           </div>
-          <h3 className={`text-2xl font-bold mb-2 text-center ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
+          <h3
+            className={`text-xl sm:text-2xl font-bold mb-2 text-center ${
+              theme === "dark" ? "text-white" : "text-gray-800"
+            }`}
+          >
             Ribbit! Success!
           </h3>
-          <p className={`text-base mb-4 text-center ${theme === "dark" ? "text-gray-200" : "text-gray-600"}`}>
+          <p
+            className={`text-sm sm:text-base mb-4 text-center ${
+              theme === "dark" ? "text-gray-200" : "text-gray-600"
+            }`}
+          >
             Your form has been submitted and is{" "}
             <span className="inline-flex items-center">
               <span className="text-green-600 font-extrabold italic">under</span>
@@ -462,7 +474,7 @@ export default function TaskForm() {
             onClick={handleTwitterFollow}
             className={`w-full py-2 px-4 ${
               theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-            } text-white rounded-full font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-4`}
+            } text-white rounded-full font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-2 sm:mb-4`}
           >
             <Image src="/x-logo.png" alt="X Logo" width={20} height={20} className="w-5 h-5" />
             Turn on Notification
@@ -487,22 +499,22 @@ export default function TaskForm() {
         style={{ display: showStatusPopup ? "flex" : "none", transition: "none" }}
       >
         <div
-          className={`w-11/12 max-w-md p-6 ${
+          className={`w-11/12 max-w-md p-4 sm:p-6 ${
             theme === "dark"
               ? "bg-gradient-to-br from-purple-800 via-blue-800 to-green-800"
               : "bg-gradient-to-br from-purple-200 via-blue-200 to-green-200"
           } rounded-3xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-y-auto`}
           style={{
             transition: "none",
-            minHeight: "450px", // Increased to accommodate content
-            maxHeight: "90vh",
+            maxHeight: "85vh", // Reduced to fit small screens
+            minHeight: "auto", // Let content dictate height
             position: "relative",
-            overflow: "hidden", // Prevent content shift
+            overflowY: "auto", // Ensure scrolling works
           }}
         >
           <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-5 pointer-events-none" />
           <h3
-            className={`text-2xl font-extrabold mb-4 flex items-center justify-center ${
+            className={`text-xl sm:text-2xl font-extrabold mb-4 flex items-center justify-center ${
               getDisplayStatus() === "Approved"
                 ? "text-green-600"
                 : getDisplayStatus() === "Rejected"
@@ -516,7 +528,7 @@ export default function TaskForm() {
             Form Status
           </h3>
 
-          <div className="w-full mb-6">
+          <div className="w-full mb-4 sm:mb-6">
             <div className="flex justify-between mb-4 text-center gap-2">
               <div className="flex-1">
                 {formStatus === "Pending" ? (
@@ -530,7 +542,7 @@ export default function TaskForm() {
                       width={0}
                       height={0}
                       sizes="100vw"
-                      className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                      className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                     />
                   </motion.div>
                 ) : (
@@ -540,7 +552,7 @@ export default function TaskForm() {
                     width={0}
                     height={0}
                     sizes="100vw"
-                    className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                    className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                   />
                 )}
                 <span className="text-xs font-bold text-yellow-600">Pending</span>
@@ -557,7 +569,7 @@ export default function TaskForm() {
                       width={0}
                       height={0}
                       sizes="100vw"
-                      className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                      className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                     />
                   </motion.div>
                 ) : (
@@ -567,7 +579,7 @@ export default function TaskForm() {
                     width={0}
                     height={0}
                     sizes="100vw"
-                    className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                    className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                   />
                 )}
                 <span className="text-xs font-bold text-blue-600">Under Review</span>
@@ -584,7 +596,7 @@ export default function TaskForm() {
                       width={0}
                       height={0}
                       sizes="100vw"
-                      className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                      className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                     />
                   </motion.div>
                 ) : formStatus === "Rejected" ? (
@@ -593,12 +605,12 @@ export default function TaskForm() {
                     transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
                   >
                     <Image
-                      src="/emojis/cry.png" // Assuming a cry emoji exists; adjust if needed
+                      src="/emojis/cry.png"
                       alt="Rejected Frog"
                       width={0}
                       height={0}
                       sizes="100vw"
-                      className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                      className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                     />
                   </motion.div>
                 ) : (
@@ -608,11 +620,15 @@ export default function TaskForm() {
                     width={0}
                     height={0}
                     sizes="100vw"
-                    className="w-full max-w-[80px] h-auto mx-auto drop-shadow-lg"
+                    className="w-full max-w-[60px] sm:max-w-[80px] h-auto mx-auto drop-shadow-lg"
                   />
                 )}
                 <span className="text-xs font-bold text-green-600">
-                  {formStatus === "Approved" ? "Approved" : formStatus === "Rejected" ? "Rejected" : "Approved/Rejected"}
+                  {formStatus === "Approved"
+                    ? "Approved"
+                    : formStatus === "Rejected"
+                    ? "Rejected"
+                    : "Approved/Rejected"}
                 </span>
               </div>
             </div>
@@ -632,7 +648,7 @@ export default function TaskForm() {
 
           {getDisplayStatus() === "Under Review" && (
             <p
-              className={`text-base font-semibold mb-4 text-center ${
+              className={`text-sm sm:text-base font-semibold mb-2 sm:mb-4 text-center ${
                 theme === "dark" ? "text-blue-300" : "text-blue-700"
               }`}
             >
@@ -652,11 +668,15 @@ export default function TaskForm() {
                   width={0}
                   height={0}
                   sizes="100vw"
-                  className="w-2/3 max-w-[200px] h-auto mx-auto mb-4 drop-shadow-lg"
+                  className="w-2/3 max-w-[150px] sm:max-w-[200px] h-auto mx-auto mb-2 sm:mb-4 drop-shadow-lg"
                 />
               </motion.div>
-              <p className="text-xl font-bold text-green-600 mb-2">Successfully Approved!</p>
-              <p className={`text-base mb-4 ${theme === "dark" ? "text-green-300" : "text-green-700"}`}>
+              <p className="text-lg sm:text-xl font-bold text-green-600 mb-2">Successfully Approved!</p>
+              <p
+                className={`text-sm sm:text-base mb-2 sm:mb-4 ${
+                  theme === "dark" ? "text-green-300" : "text-green-700"
+                }`}
+              >
                 Congratulations, you are eligible for Froggy WL!
               </p>
               <a
@@ -665,7 +685,7 @@ export default function TaskForm() {
                 rel="noopener noreferrer"
                 className={`flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg ${
                   theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-                } text-white font-semibold shadow-md hover:shadow-lg mb-4`}
+                } text-white font-semibold shadow-md hover:shadow-lg mb-2 sm:mb-4`}
               >
                 <Image src="/x-logo.png" alt="X Logo" width={20} height={20} className="w-5 h-5" />
                 Share on X
@@ -679,16 +699,20 @@ export default function TaskForm() {
                 transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
               >
                 <Image
-                  src="/emojis/cry.png" // Replace with appropriate crying emoji path if different
+                  src="/emojis/cry.png"
                   alt="Cry Frog"
                   width={0}
                   height={0}
                   sizes="100vw"
-                  className="w-2/3 max-w-[200px] h-auto mx-auto mb-4 drop-shadow-lg"
+                  className="w-2/3 max-w-[150px] sm:max-w-[200px] h-auto mx-auto mb-2 sm:mb-4 drop-shadow-lg"
                 />
               </motion.div>
-              <p className="text-xl font-bold text-red-600 mb-2">Sorry, Rejected</p>
-              <p className={`text-base mb-4 ${theme === "dark" ? "text-red-300" : "text-red-700"}`}>
+              <p className="text-lg sm:text-xl font-bold text-red-600 mb-2">Sorry, Rejected</p>
+              <p
+                className={`text-sm sm:text-base mb-2 sm:mb-4 ${
+                  theme === "dark" ? "text-red-300" : "text-red-700"
+                }`}
+              >
                 Try again later.
               </p>
             </div>
@@ -698,7 +722,7 @@ export default function TaskForm() {
             onClick={handleTwitterFollow}
             className={`w-full py-2 px-4 ${
               theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-            } text-white rounded-full font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-4`}
+            } text-white rounded-full font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-2 sm:mb-4`}
           >
             <Image src="/x-logo.png" alt="X Logo" width={20} height={20} className="w-5 h-5" />
             Turn on Notification
@@ -711,7 +735,6 @@ export default function TaskForm() {
           >
             Close
           </button>
-          {/* Confetti Container within Popup */}
           <div
             style={{
               position: "absolute",
@@ -720,15 +743,15 @@ export default function TaskForm() {
               right: 0,
               bottom: 0,
               pointerEvents: "none",
-              zIndex: 10, // Above content but within popup
+              zIndex: 10,
               display: formStatus === "Approved" && showStatusPopup ? "block" : "none",
             }}
           >
             <Confetti
               recycle={false}
-              numberOfPieces={200} // Reduced for less intensity
-              width={400} // Match approximate popup width
-              height={450} // Match minHeight of popup
+              numberOfPieces={200}
+              width={400} // Approximate popup width
+              height={window.innerHeight * 0.85} // Match maxHeight dynamically
             />
           </div>
         </div>
