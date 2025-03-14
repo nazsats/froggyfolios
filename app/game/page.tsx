@@ -54,14 +54,13 @@ export default function Game() {
 
   const initializeElements = (width: number, height: number) => {
     const elements: Element[] = [];
-    const size = Math.max(Math.min(width * 0.04, 20), 12); // Scale size dynamically, min 12px, max 20px
+    const size = Math.max(Math.min(width * 0.04, 20), 12);
     const speed = 0.7;
-    const padding = size; // Padding from edges
+    const padding = size;
 
-    // Frogs (top-left)
     for (let i = 0; i < 33; i++) {
       elements.push({
-        x: padding + (i % 6) * size * 1.2, // Reduced spacing factor for smaller screens
+        x: padding + (i % 6) * size * 1.2,
         y: padding + Math.floor(i / 6) * size * 1.2,
         dx: (Math.random() - 0.5) * speed,
         dy: (Math.random() - 0.5) * speed,
@@ -69,7 +68,6 @@ export default function Game() {
       });
     }
 
-    // Insects (top-right)
     for (let i = 0; i < 33; i++) {
       elements.push({
         x: width - padding - size - (i % 6) * size * 1.2,
@@ -80,7 +78,6 @@ export default function Game() {
       });
     }
 
-    // Snakes (bottom-left)
     for (let i = 0; i < 33; i++) {
       elements.push({
         x: padding + (i % 6) * size * 1.2,
@@ -137,7 +134,7 @@ export default function Game() {
 
     if (!isPlayingRef.current) {
       const size = Math.min(width * 0.15, 80);
-      ctx.font = `${size * 0.5}px Arial`;
+      ctx.font = `${size * 0.5}px "Poppins", sans-serif`; // Use Poppins for VS text
       ctx.fillStyle = theme === "dark" ? "#ffffff" : "#1f2937";
       ctx.textAlign = "center";
       if (frogImgRef.current) ctx.drawImage(frogImgRef.current, width * 0.25 - size / 2, height / 2 - size / 2, size, size);
@@ -152,14 +149,14 @@ export default function Game() {
         el.x += el.dx;
         el.y += el.dy;
 
-        const size = Math.max(Math.min(width * 0.04, 20), 12); // Match size from initializeElements
+        const size = Math.max(Math.min(width * 0.04, 20), 12);
         if (el.x < 0 || el.x > width - size) el.dx *= -1;
         if (el.y < 0 || el.y > height - size) el.dy *= -1;
 
         for (let j = i + 1; j < elements.length; j++) {
           const other = elements[j];
           const dist = Math.sqrt((el.x - other.x) ** 2 + (el.y - other.y) ** 2);
-          if (dist < size * 1.1) { // Adjusted collision radius
+          if (dist < size * 1.1) {
             if (el.type === "frog" && other.type === "insect") other.type = "frog";
             else if (el.type === "insect" && other.type === "frog") el.type = "frog";
             else if (el.type === "insect" && other.type === "snake") other.type = "insect";
