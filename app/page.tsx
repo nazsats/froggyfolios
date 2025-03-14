@@ -157,6 +157,18 @@ export default function Home() {
               >
                 Apply Whitelist
               </motion.a>
+              <motion.a
+                href="/game"
+                className={`block w-full py-3 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-red-500 hover:bg-red-600"
+                } text-white font-semibold text-center transition transform hover:scale-105 hover:shadow-lg focus:outline-none`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Play Game
+              </motion.a>
             </div>
             <motion.div
               className="mt-4 text-center"
@@ -169,6 +181,8 @@ export default function Home() {
             </motion.div>
           </div>
         </motion.div>
+
+        
       </div>
 
       {/* Popup for Whitelist Result */}
