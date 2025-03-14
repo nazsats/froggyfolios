@@ -54,33 +54,37 @@ export default function Game() {
 
   const initializeElements = (width: number, height: number) => {
     const elements: Element[] = [];
-    const size = 24;
+    const size = Math.max(Math.min(width * 0.04, 20), 12); // Scale size dynamically, min 12px, max 20px
     const speed = 0.7;
+    const padding = size; // Padding from edges
 
+    // Frogs (top-left)
     for (let i = 0; i < 33; i++) {
       elements.push({
-        x: 20 + (i % 6) * size * 1.5,
-        y: 20 + Math.floor(i / 6) * size * 1.5,
+        x: padding + (i % 6) * size * 1.2, // Reduced spacing factor for smaller screens
+        y: padding + Math.floor(i / 6) * size * 1.2,
         dx: (Math.random() - 0.5) * speed,
         dy: (Math.random() - 0.5) * speed,
         type: "frog",
       });
     }
 
+    // Insects (top-right)
     for (let i = 0; i < 33; i++) {
       elements.push({
-        x: width - 80 - (i % 6) * size * 1.5,
-        y: 20 + Math.floor(i / 6) * size * 1.5,
+        x: width - padding - size - (i % 6) * size * 1.2,
+        y: padding + Math.floor(i / 6) * size * 1.2,
         dx: (Math.random() - 0.5) * speed,
         dy: (Math.random() - 0.5) * speed,
         type: "insect",
       });
     }
 
+    // Snakes (bottom-left)
     for (let i = 0; i < 33; i++) {
       elements.push({
-        x: 20 + (i % 6) * size * 1.5,
-        y: height - 80 - Math.floor(i / 6) * size * 1.5,
+        x: padding + (i % 6) * size * 1.2,
+        y: height - padding - size - Math.floor(i / 6) * size * 1.2,
         dx: (Math.random() - 0.5) * speed,
         dy: (Math.random() - 0.5) * speed,
         type: "snake",
@@ -148,13 +152,14 @@ export default function Game() {
         el.x += el.dx;
         el.y += el.dy;
 
-        if (el.x < 0 || el.x > width - 24) el.dx *= -1;
-        if (el.y < 0 || el.y > height - 24) el.dy *= -1;
+        const size = Math.max(Math.min(width * 0.04, 20), 12); // Match size from initializeElements
+        if (el.x < 0 || el.x > width - size) el.dx *= -1;
+        if (el.y < 0 || el.y > height - size) el.dy *= -1;
 
         for (let j = i + 1; j < elements.length; j++) {
           const other = elements[j];
           const dist = Math.sqrt((el.x - other.x) ** 2 + (el.y - other.y) ** 2);
-          if (dist < 25) {
+          if (dist < size * 1.1) { // Adjusted collision radius
             if (el.type === "frog" && other.type === "insect") other.type = "frog";
             else if (el.type === "insect" && other.type === "frog") el.type = "frog";
             else if (el.type === "insect" && other.type === "snake") other.type = "insect";
@@ -164,7 +169,6 @@ export default function Game() {
           }
         }
 
-        const size = Math.min(width * 0.06, 24);
         if (el.type === "frog" && frogImgRef.current) {
           ctx.drawImage(frogImgRef.current, el.x, el.y, size, size);
         } else if (el.type === "insect" && insectImgRef.current) {
@@ -200,8 +204,17 @@ export default function Game() {
     const resizeCanvas = () => {
       if (canvasRef.current && containerRef.current) {
         const container = containerRef.current;
-        const width = Math.min(container.clientWidth * 0.9, 700);
-        const height = width * 0.6;
+        const maxWidth = Math.min(container.clientWidth * 0.95, 700);
+        const maxHeight = Math.min(window.innerHeight * 0.5, 400);
+        const aspectRatio = 3 / 2;
+        let width = maxWidth;
+        let height = width / aspectRatio;
+
+        if (height > maxHeight) {
+          height = maxHeight;
+          width = height * aspectRatio;
+        }
+
         canvasRef.current.width = width;
         canvasRef.current.height = height;
 
