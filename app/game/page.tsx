@@ -55,7 +55,7 @@ export default function Game() {
   const initializeElements = (width: number, height: number) => {
     const elements: Element[] = [];
     const size = Math.max(Math.min(width * 0.04, 20), 12);
-    const speed = 0.7;
+    const speed = 1;
     const padding = size;
 
     for (let i = 0; i < 33; i++) {
@@ -253,7 +253,7 @@ export default function Game() {
         tweetText = "A wild battle unfolded in the Froggy Folios game!";
     }
 
-    tweetText += ` Final count: 🐸 ${counts.frog} | 🪲 ${counts.insect} | 🐍 ${counts.snake}. Play now at @FroggyFolios! https://froggyfolios.com/game`;
+    tweetText += ` Final count: 🐸 ${counts.frog} | 🪲 ${counts.insect} | 🐍 ${counts.snake}. Play now at @FroggyFolios! https://froggyfolios.xyz/game`;
 
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, "_blank", "width=600,height=400");
