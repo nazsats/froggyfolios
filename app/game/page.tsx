@@ -18,6 +18,7 @@ export default function Game() {
   const containerRef = useRef<HTMLDivElement>(null);
   const elementsRef = useRef<Element[]>([]);
   const isPlayingRef = useRef(false);
+  const predictionRef = useRef<"frog" | "insect" | "snake" | null>(null);
   const [counts, setCounts] = useState({ frog: 33, insect: 33, snake: 33 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winner, setWinner] = useState<"frog" | "insect" | "snake" | null>(null);
@@ -28,21 +29,22 @@ export default function Game() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [prediction, setPrediction] = useState<"frog" | "insect" | "snake" | null>(null);
   const [points, setPoints] = useState<number>(0);
-  const [pointsAnimation, setPointsAnimation] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
     setTheme(savedTheme || "dark");
 
     const savedPoints = localStorage.getItem("points");
-    if (savedPoints) {
-      setPoints(parseInt(savedPoints, 10));
-    }
+    const initialPoints = savedPoints ? parseInt(savedPoints, 10) : 0;
+    setPoints(initialPoints);
+    console.log("Initial points loaded:", initialPoints);
 
     if (typeof window !== "undefined") {
       const appElement = document.querySelector("#__next");
       if (appElement) {
         Modal.setAppElement(appElement as HTMLElement);
+      } else {
+        console.warn("App element '#__next' not found for react-modal");
       }
 
       frogImgRef.current = new Image();
@@ -109,7 +111,9 @@ export default function Game() {
 
   const startGame = (predictedType: "frog" | "insect" | "snake") => {
     if (!isPlayingRef.current && canvasRef.current) {
+      console.log("Starting game with prediction:", predictedType);
       setPrediction(predictedType);
+      predictionRef.current = predictedType;
       setCountdown(3);
       const width = canvasRef.current.width;
       const height = canvasRef.current.height;
@@ -120,6 +124,7 @@ export default function Game() {
           if (prev === null || prev <= 1) {
             clearInterval(countdownInterval);
             isPlayingRef.current = true;
+            console.log("Countdown finished, prediction (state):", prediction, "prediction (ref):", predictionRef.current);
             animate();
             return null;
           }
@@ -189,15 +194,16 @@ export default function Game() {
       const allSame = elements.every((el) => el.type === elements[0].type);
       if (allSame) {
         isPlayingRef.current = false;
-        setWinner(elements[0].type);
-        if (elements[0].type === prediction) {
-          setPoints((prev) => {
-            const newPoints = prev + 10;
-            localStorage.setItem("points", newPoints.toString());
-            setPointsAnimation(true);
-            setTimeout(() => setPointsAnimation(false), 1000);
-            return newPoints;
-          });
+        const gameWinner = elements[0].type;
+        setWinner(gameWinner);
+        console.log("Game ended - Winner:", gameWinner, "Prediction (state):", prediction, "Prediction (ref):", predictionRef.current, "Current Points:", points);
+        if (gameWinner === predictionRef.current) {
+          const newPoints = points + 10;
+          console.log("Points updating to:", newPoints);
+          setPoints(newPoints);
+          localStorage.setItem("points", newPoints.toString());
+        } else {
+          console.log("No points added - Prediction mismatch or null");
         }
         setIsModalOpen(true);
         confetti({
@@ -278,9 +284,11 @@ export default function Game() {
   };
 
   const resetGame = () => {
+    console.log("Resetting game - Current Points:", points, "Prediction before reset:", prediction);
     setIsModalOpen(false);
     setWinner(null);
     setPrediction(null);
+    predictionRef.current = null;
     setCounts({ frog: 33, insect: 33, snake: 33 });
   };
 
@@ -292,7 +300,7 @@ export default function Game() {
         </button>
       </div>
       <h1 className={styles.title}>Froggy Food Chain</h1>
-      <div className={`${styles.pointsDisplay} ${pointsAnimation ? styles.pointsAnimation : ""}`}>
+      <div className={styles.pointsDisplay}>
         Points: {points}
       </div>
       {!prediction && !countdown && !isPlayingRef.current && (
