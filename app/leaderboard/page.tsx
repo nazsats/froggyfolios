@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Modal from "react-modal";
-import gameStyles from "../../styles/Game.module.css"; // Reuse game styles for theme
-import styles from "../../styles/Leaderboard.module.css"; // New stylesheet for structure and table colors
+import gameStyles from "../../styles/Game.module.css";
+import styles from "../../styles/Leaderboard.module.css";
 import { createClient } from "@supabase/supabase-js";
 import { getAddress, AddressPurpose, BitcoinNetworkType } from "sats-connect";
 
@@ -21,7 +21,28 @@ interface LeaderboardEntry {
 interface WalletAddress {
   address: string;
   publicKey: string;
-  purpose: "payment" | "ordinals";
+  purpose: AddressPurpose;
+  addressType?: string;
+}
+
+// Define a type for Xverse addresses
+interface XverseAddress {
+  address: string;
+  purpose: "payment" | "ordinals"; // Xverse uses string literals, not AddressPurpose
+  [key: string]: any; // Allow additional properties
+}
+
+declare global {
+  interface Window {
+    magicEden?: {
+      bitcoin: any;
+    };
+    unisat?: {
+      requestAccounts: () => Promise<string[]>;
+      getAccounts: () => Promise<string[]>;
+      [key: string]: any;
+    };
+  }
 }
 
 export default function Leaderboard() {
@@ -39,7 +60,11 @@ export default function Leaderboard() {
     setTheme(savedTheme || "dark");
     if (typeof window !== "undefined") {
       const appElement = document.querySelector("#__next");
-      if (appElement) Modal.setAppElement(appElement as HTMLElement);
+      if (appElement) {
+        Modal.setAppElement(appElement as HTMLElement);
+      } else {
+        console.warn("App element '#__next' not found yet; modal may not work until DOM is fully loaded.");
+      }
     }
   }, []);
 
@@ -49,7 +74,7 @@ export default function Leaderboard() {
     localStorage.setItem("theme", newTheme);
   };
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("game_users")
@@ -75,11 +100,11 @@ export default function Leaderboard() {
       console.error("Error fetching leaderboard:", error);
       setLeaderboard([]);
     }
-  };
+  }, [walletAddress]);
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [walletAddress]);
+  }, [fetchLeaderboard]);
 
   const getBtcProvider = async () => {
     if (window.magicEden?.bitcoin) return window.magicEden.bitcoin;
@@ -90,6 +115,8 @@ export default function Leaderboard() {
     setIsWalletModalOpen(false);
     try {
       let address: string | null = null;
+
+      console.log(`Attempting to connect ${provider} wallet...`);
 
       if (provider === "magicEden") {
         if (window.magicEden?.bitcoin) {
@@ -102,7 +129,7 @@ export default function Leaderboard() {
             },
             onFinish: (response) => {
               const taprootAddress = response.addresses.find(
-                (addr: WalletAddress) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
+                (addr: WalletAddress) => addr.purpose === AddressPurpose.Ordinals && addr.address.startsWith("bc1p")
               );
               address = taprootAddress?.address || null;
             },
@@ -112,13 +139,22 @@ export default function Leaderboard() {
           });
           if (!address) throw new Error("No Taproot address (bc1p...) found");
         } else {
+          console.log("Magic Eden wallet not detected.");
           alert("Magic Eden wallet not detected. Please install it.");
           window.open("https://wallet.magiceden.io/", "_blank");
           return;
         }
       } else if (provider === "xverse") {
-        if (window.XverseProviders?.BitcoinProvider) {
-          const connectResponse = await window.XverseProviders.BitcoinProvider.request("wallet_connect", null);
+        const xverse = (window as any).XverseProviders as {
+          BitcoinProvider?: {
+            request: (method: string, params: any) => Promise<{ result: any; error?: { message: string } }>;
+          };
+        } | undefined;
+
+        if (xverse?.BitcoinProvider) {
+          console.log("Xverse BitcoinProvider detected, requesting wallet_connect...");
+          const connectResponse = await xverse.BitcoinProvider.request("wallet_connect", null);
+          console.log("Xverse connect response:", connectResponse);
           if (!connectResponse.result) throw new Error(connectResponse.error?.message || "Xverse connection failed");
 
           const params = {
@@ -126,28 +162,34 @@ export default function Leaderboard() {
             message: "Provide addresses for Froggy Folios leaderboard",
             network: { type: "Mainnet" },
           };
-          const addressResponse = await window.XverseProviders.BitcoinProvider.request("getAddresses", params);
+          console.log("Requesting Xverse addresses with params:", params);
+          const addressResponse = await xverse.BitcoinProvider.request("getAddresses", params);
+          console.log("Xverse address response:", addressResponse);
           if (!addressResponse.result || !Array.isArray(addressResponse.result.addresses)) {
             throw new Error(addressResponse.error?.message || "Failed to fetch Xverse addresses");
           }
 
           const taprootAddressItem = addressResponse.result.addresses.find(
-            (addr) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
+            (addr: XverseAddress) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
           );
           address = taprootAddressItem?.address || null;
           if (!address) throw new Error("No Taproot address (bc1p...) found");
         } else {
+          console.log("Xverse wallet not detected.");
           alert("Xverse wallet not detected. Please install it.");
           window.open("https://www.xverse.app/", "_blank");
           return;
         }
       } else if (provider === "unisat") {
         if (window.unisat) {
+          console.log("UniSat wallet detected, requesting accounts...");
           try {
             const accounts = await window.unisat.requestAccounts();
+            console.log("UniSat accounts:", accounts);
             address = accounts.find((addr: string) => addr.startsWith("bc1p")) || null;
             if (!address) {
               const currentAccounts = await window.unisat.getAccounts();
+              console.log("UniSat current accounts:", currentAccounts);
               address = currentAccounts.find((addr: string) => addr.startsWith("bc1p")) || null;
             }
           } catch (e) {
@@ -155,6 +197,7 @@ export default function Leaderboard() {
             throw new Error("Failed to connect UniSat wallet");
           }
         } else {
+          console.log("UniSat wallet not detected.");
           alert("UniSat wallet not detected. Please install it.");
           window.open("https://unisat.io/", "_blank");
           return;

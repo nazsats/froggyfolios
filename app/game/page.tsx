@@ -1,6 +1,20 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+declare global {
+  interface Window {
+    magicEden?: {
+      bitcoin: any;
+    };
+    unisat?: {
+      requestAccounts: () => Promise<string[]>;
+      getAccounts: () => Promise<string[]>;
+      [key: string]: any;
+    };
+    // Removed XverseProviders declaration to avoid conflict
+  }
+}
+
+import { useRef, useEffect, useState, useCallback } from "react";
 import Modal from "react-modal";
 import confetti from "canvas-confetti";
 import styles from "../../styles/Game.module.css";
@@ -23,7 +37,8 @@ interface Element {
 interface WalletAddress {
   address: string;
   publicKey: string;
-  purpose: "payment" | "ordinals";
+  purpose: AddressPurpose;
+  addressType?: string;
 }
 
 export default function Game() {
@@ -47,23 +62,27 @@ export default function Game() {
   const [userRank, setUserRank] = useState<number | null>(null);
 
   useEffect(() => {
-    console.log("Initial walletAddress:", walletAddress);
-    setWalletAddress(null); // Ensure it starts as null
+    console.log("useEffect triggered, walletAddress:", walletAddress);
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
     setTheme(savedTheme || "dark");
 
     if (typeof window !== "undefined") {
-      const setModalAppElement = () => {
+      let retries = 0;
+      const maxRetries = 50;
+      const setAppElement = () => {
         const appElement = document.querySelector("#__next");
         if (appElement) {
           Modal.setAppElement(appElement as HTMLElement);
+          console.log("Modal.setAppElement succeeded");
+        } else if (retries < maxRetries) {
+          console.warn("App element '#__next' not found yet, retrying...");
+          retries++;
+          setTimeout(setAppElement, 100);
         } else {
-          console.error("App element '#__next' not found");
+          console.error("Failed to set Modal app element after", maxRetries, "retries");
         }
       };
-
-      setModalAppElement();
-      window.addEventListener("load", setModalAppElement);
+      setAppElement();
 
       frogImgRef.current = new Image();
       frogImgRef.current.src = "/frog.png";
@@ -71,10 +90,8 @@ export default function Game() {
       insectImgRef.current.src = "/insect.png";
       snakeImgRef.current = new Image();
       snakeImgRef.current.src = "/snake.png";
-
-      return () => window.removeEventListener("load", setModalAppElement);
     }
-  }, []);
+  }, [walletAddress]);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -82,7 +99,7 @@ export default function Game() {
     localStorage.setItem("theme", newTheme);
   };
 
-  const fetchLeaderboardAndRank = async (address: string) => {
+  const fetchLeaderboardAndRank = useCallback(async (address: string) => {
     try {
       const { data, error } = await supabase
         .from("game_users")
@@ -103,9 +120,9 @@ export default function Game() {
       console.error("Error fetching leaderboard for rank:", error);
       setUserRank(null);
     }
-  };
+  }, []);
 
-  const fetchPointsFromSupabase = async (address: string) => {
+  const fetchPointsFromSupabase = useCallback(async (address: string) => {
     try {
       const { data, error } = await supabase
         .from("game_users")
@@ -113,16 +130,17 @@ export default function Game() {
         .eq("address", address)
         .single();
       if (error && error.code !== "PGRST116") throw error;
-      setPoints(data?.points || 0);
-      console.log(`Points fetched for ${address}: ${data?.points || 0}`);
+      const fetchedPoints = data?.points || 0;
+      setPoints(fetchedPoints);
+      console.log(`Points fetched for ${address}: ${fetchedPoints}`);
       fetchLeaderboardAndRank(address);
     } catch (error) {
       console.error("Error fetching points from Supabase:", error);
       setPoints(0);
     }
-  };
+  }, [fetchLeaderboardAndRank]);
 
-  const saveWalletToSupabase = async (address: string) => {
+  const saveWalletToSupabase = useCallback(async (address: string) => {
     try {
       const { data, error } = await supabase
         .from("game_users")
@@ -137,9 +155,9 @@ export default function Game() {
       console.error("Error saving wallet to Supabase:", error);
       setPoints(0);
     }
-  };
+  }, [fetchLeaderboardAndRank]);
 
-  const savePointsToSupabase = async (address: string, newPoints: number) => {
+  const savePointsToSupabase = useCallback(async (address: string, newPoints: number) => {
     try {
       const { error } = await supabase
         .from("game_users")
@@ -151,7 +169,7 @@ export default function Game() {
     } catch (error) {
       console.error("Error saving points to Supabase:", error);
     }
-  };
+  }, [fetchLeaderboardAndRank]);
 
   const getBtcProvider = async () => {
     if (window.magicEden?.bitcoin) {
@@ -160,10 +178,12 @@ export default function Game() {
     throw new Error("Magic Eden wallet not detected");
   };
 
-  const connectWallet = async (provider: "magicEden" | "xverse" | "unisat") => {
+  const connectWallet = useCallback(async (provider: "magicEden" | "xverse" | "unisat") => {
     setIsWalletModalOpen(false);
     try {
       let address: string | null = null;
+
+      console.log(`Attempting to connect ${provider} wallet...`);
 
       if (provider === "magicEden") {
         if (window.magicEden?.bitcoin) {
@@ -179,7 +199,7 @@ export default function Game() {
             onFinish: (response) => {
               console.log("Magic Eden onFinish response:", response.addresses);
               const taprootAddress = response.addresses.find(
-                (addr: WalletAddress) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
+                (addr: WalletAddress) => addr.purpose === AddressPurpose.Ordinals && addr.address.startsWith("bc1p")
               );
               address = taprootAddress?.address || null;
             },
@@ -192,38 +212,73 @@ export default function Game() {
             throw new Error("No Taproot address (bc1p...) found");
           }
         } else {
+          console.log("Magic Eden wallet not detected.");
           alert("Magic Eden wallet not detected. Please install it.");
           window.open("https://wallet.magiceden.io/", "_blank");
           return;
         }
       } else if (provider === "xverse") {
-        if (window.XverseProviders?.BitcoinProvider) {
-          const connectResponse = await window.XverseProviders.BitcoinProvider.request("wallet_connect", null);
+        // Type assertion for XverseProviders
+        const xverse = (window as any).XverseProviders as {
+          BitcoinProvider?: {
+            request: (method: string, params: any) => Promise<{ result: any; error?: { message: string } }>;
+          };
+        } | undefined;
+
+        if (xverse?.BitcoinProvider) {
+          console.log("Xverse BitcoinProvider detected, requesting wallet_connect...");
+          const connectResponse = await xverse.BitcoinProvider.request("wallet_connect", null);
+          console.log("Xverse connect response:", connectResponse);
           if (!connectResponse.result) {
             throw new Error(connectResponse.error?.message || "Xverse connection failed");
           }
-      
+
           const params = {
             purposes: ["payment", "ordinals"],
             message: "Provide addresses for Froggy Folios game",
             network: { type: "Mainnet" },
           };
-          const addressResponse = await window.XverseProviders.BitcoinProvider.request("getAddresses", params);
+          console.log("Requesting Xverse addresses with params:", params);
+          const addressResponse = await xverse.BitcoinProvider.request("getAddresses", params);
+          console.log("Xverse address response:", addressResponse);
           if (!addressResponse.result || !Array.isArray(addressResponse.result.addresses)) {
             throw new Error(addressResponse.error?.message || "Failed to fetch Xverse addresses");
           }
-      
+
           const taprootAddressItem = addressResponse.result.addresses.find(
-            (addr) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
+            (addr: any) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
           );
           address = taprootAddressItem?.address || null;
-      
+
           if (!address) {
             throw new Error("No Taproot address (bc1p...) found");
           }
         } else {
+          console.log("Xverse wallet not detected.");
           alert("Xverse wallet not detected. Please install it.");
           window.open("https://www.xverse.app/", "_blank");
+          return;
+        }
+      } else if (provider === "unisat") {
+        if (window.unisat) {
+          console.log("UniSat wallet detected, requesting accounts...");
+          try {
+            const accounts = await window.unisat.requestAccounts();
+            console.log("UniSat accounts:", accounts);
+            address = accounts.find((addr: string) => addr.startsWith("bc1p")) || null;
+            if (!address) {
+              const currentAccounts = await window.unisat.getAccounts();
+              console.log("UniSat current accounts:", currentAccounts);
+              address = currentAccounts.find((addr: string) => addr.startsWith("bc1p")) || null;
+            }
+          } catch (e) {
+            console.error("UniSat connect failed:", e);
+            throw new Error("Failed to connect UniSat wallet");
+          }
+        } else {
+          console.log("UniSat wallet not detected.");
+          alert("UniSat wallet not detected. Please install it.");
+          window.open("https://unisat.io/", "_blank");
           return;
         }
       }
@@ -233,8 +288,9 @@ export default function Game() {
         return;
       }
 
-      setPoints(0);
+      console.log("Setting walletAddress to:", address);
       setWalletAddress(address);
+      setPoints(0); // Reset points initially
       console.log(`Wallet connected with address: ${address}`);
 
       const { data: existingData } = await supabase
@@ -256,13 +312,21 @@ export default function Game() {
       setPoints(0);
       setUserRank(null);
     }
-  };
+  }, [fetchPointsFromSupabase, saveWalletToSupabase]);
 
-  const disconnectWallet = async () => {
+  const disconnectWallet = useCallback(async () => {
     try {
       if (walletAddress) {
-        if (window.XverseProviders?.BitcoinProvider) {
-          await window.XverseProviders.BitcoinProvider.request("wallet_disconnect", null);
+        // Type assertion for XverseProviders in disconnect
+        const xverse = (window as any).XverseProviders as {
+          BitcoinProvider?: {
+            request: (method: string, params: any) => Promise<any>;
+          };
+        } | undefined;
+
+        if (xverse?.BitcoinProvider) {
+          console.log("Disconnecting Xverse wallet...");
+          await xverse.BitcoinProvider.request("wallet_disconnect", null);
           console.log("Xverse wallet disconnected");
         } else if (window.unisat) {
           console.log("UniSat wallet disconnected (state cleared)");
@@ -280,9 +344,9 @@ export default function Game() {
       setPoints(0);
       setUserRank(null);
     }
-  };
+  }, [walletAddress]);
 
-  const initializeElements = (width: number, height: number) => {
+  const initializeElements = useCallback((width: number, height: number) => {
     const elements: Element[] = [];
     const size = Math.max(Math.min(width * 0.04, 20), 12);
     const speed = 1;
@@ -320,7 +384,7 @@ export default function Game() {
 
     elementsRef.current = elements;
     updateCounts(elements);
-  };
+  }, []);
 
   const updateCounts = (elements: Element[]) => {
     const frog = elements.filter((el) => el.type === "frog").length;
@@ -329,35 +393,7 @@ export default function Game() {
     setCounts({ frog, insect, snake });
   };
 
-  const startGame = (predictedType: "frog" | "insect" | "snake") => {
-    if (!walletAddress) {
-      alert("Please connect your wallet first!");
-      return;
-    }
-    if (!isPlayingRef.current && canvasRef.current) {
-      console.log("Starting game with prediction:", predictedType);
-      setPrediction(predictedType);
-      predictionRef.current = predictedType;
-      setCountdown(3);
-      const width = canvasRef.current.width;
-      const height = canvasRef.current.height;
-      initializeElements(width, height);
-
-      const countdownInterval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            clearInterval(countdownInterval);
-            isPlayingRef.current = true;
-            animate();
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-  };
-
-  const animate = () => {
+  const animate = useCallback(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
@@ -439,7 +475,35 @@ export default function Game() {
     if (isPlayingRef.current) {
       requestAnimationFrame(animate);
     }
-  };
+  }, [theme, points, walletAddress, savePointsToSupabase]);
+
+  const startGame = useCallback((predictedType: "frog" | "insect" | "snake") => {
+    if (!walletAddress) {
+      alert("Please connect your wallet first!");
+      return;
+    }
+    if (!isPlayingRef.current && canvasRef.current) {
+      console.log("Starting game with prediction:", predictedType);
+      setPrediction(predictedType);
+      predictionRef.current = predictedType;
+      setCountdown(3);
+      const width = canvasRef.current.width;
+      const height = canvasRef.current.height;
+      initializeElements(width, height);
+
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(countdownInterval);
+            isPlayingRef.current = true;
+            animate();
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  }, [walletAddress, animate, initializeElements]);
 
   useEffect(() => {
     const resizeCanvas = () => {
@@ -471,7 +535,7 @@ export default function Game() {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
     return () => window.removeEventListener("resize", resizeCanvas);
-  }, [theme]);
+  }, [animate, initializeElements, theme]);
 
   const getLeadingElement = () => {
     const { frog, insect, snake } = counts;
@@ -481,7 +545,7 @@ export default function Game() {
     return "snake";
   };
 
-  const handleShareOnX = () => {
+  const handleShareOnX = useCallback(() => {
     let tweetText = "";
     switch (winner) {
       case "frog":
@@ -501,7 +565,7 @@ export default function Game() {
 
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, "_blank", "width=600,height=400");
-  };
+  }, [winner, counts, prediction, points]);
 
   const resetGame = () => {
     setIsModalOpen(false);
@@ -524,8 +588,14 @@ export default function Game() {
     window.location.href = "/leaderboard";
   };
 
+  console.log("Rendering with walletAddress:", walletAddress, "points:", points);
+
   return (
-    <div className={`${styles.container} ${theme === "dark" ? styles.dark : styles.light}`} ref={containerRef}>
+    <div
+      className={`${styles.container} ${theme === "dark" ? styles.dark : styles.light}`}
+      ref={containerRef}
+      style={{ visibility: "visible" }}
+    >
       <div className={styles.themeToggle}>
         <button onClick={toggleTheme} className={`${styles.themeButton} ${theme === "dark" ? styles.themeButtonDark : styles.themeButtonLight}`}>
           {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
@@ -623,7 +693,7 @@ export default function Game() {
         onRequestClose={resetGame}
         className={`${styles.modal} ${theme === "dark" ? styles.modalDark : styles.modalLight}`}
         overlayClassName={styles.modalOverlay}
-        style={{ overlay: { zIndex: 1000 } }} // Ensure modal overlay is above all content
+        style={{ overlay: { zIndex: 1000 } }}
       >
         <h2 className={styles.modalTitle}>
           {winner === "frog"
@@ -670,7 +740,7 @@ export default function Game() {
         onRequestClose={() => setIsWalletModalOpen(false)}
         className={`${styles.walletModal} ${theme === "dark" ? styles.modalDark : styles.modalLight}`}
         overlayClassName={styles.modalOverlay}
-        style={{ overlay: { zIndex: 1000 } }} // Ensure wallet modal is above all content
+        style={{ overlay: { zIndex: 1000 } }}
       >
         <h2 className={styles.modalTitle}>Choose Your Wallet</h2>
         <div className={styles.walletOptions}>
