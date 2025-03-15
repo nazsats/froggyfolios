@@ -1,0 +1,135 @@
+/* Leaderboard.module.css */
+
+/* User Info Container */
+.userInfoContainer {
+    max-width: 600px;
+    margin: 0 auto 30px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .userInfoHeader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 10px;
+  }
+  
+  .userAddress {
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  
+  .userStats {
+    text-align: center;
+  }
+  
+  /* Connect Container */
+  .connectContainer {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  /* Leaderboard Container */
+  .leaderboardContainer {
+    max-width: 1000px; /* Wider table */
+    margin: 0 auto;
+  }
+  
+  /* Table Container */
+  .tableContainer {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Table Header */
+  .tableHeader {
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr; /* Adjusted for wider User column */
+    padding: 18px 30px; /* More padding */
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6); /* Blue gradient for table */
+    color: #ffffff;
+  }
+  
+  .tableHeader span {
+    text-align: center;
+  }
+  
+  /* Table Body */
+  .tableBody {
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  
+  .tableRow {
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr; /* Wider User column */
+    padding: 15px 30px; /* More padding */
+    background: #172554; /* Dark blue for rows */
+    border-bottom: 1px solid #1e40af; /* Blue border */
+    transition: transform 0.3s ease, background 0.3s ease;
+  }
+  
+  .tableRow:hover {
+    transform: translateY(-2px);
+    background: #1e40af; /* Lighter blue on hover */
+  }
+  
+  .tableRow span {
+    text-align: center;
+    font-size: 1rem;
+    color: #bfdbfe; /* Light blue text */
+  }
+  
+  /* No Data */
+  .noData {
+    padding: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #94a3b8;
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  
+  .paginationButton {
+    padding: 8px 12px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 600px) {
+    .userInfoContainer {
+      padding: 10px 15px;
+    }
+    .userInfoHeader {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .leaderboardContainer {
+      max-width: 100%;
+      padding: 0 10px;
+    }
+    .tableHeader,
+    .tableRow {
+      grid-template-columns: 1fr 2fr 1fr; /* Adjusted for mobile */
+      padding: 12px 15px;
+      font-size: 0.9rem;
+    }
+  }

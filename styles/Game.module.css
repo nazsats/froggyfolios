@@ -24,203 +24,276 @@
 
 .themeToggle {
   position: absolute;
-  top: clamp(5px, 1vw, 10px);
-  right: clamp(5px, 1vw, 10px);
+  top: clamp(10px, 2vw, 20px);
+  right: clamp(10px, 2vw, 20px);
+  z-index: 10; /* Ensure toggle is above other content */
 }
 
 .themeButton {
   padding: 8px 16px;
   font-size: clamp(0.9rem, 2vw, 1rem);
   border: none;
-  border-radius: 20px;
+  border-radius: 25px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .themeButtonDark {
-  background: linear-gradient(45deg, #4caf50, #2e7d32);
+  background: linear-gradient(45deg, #00ff99, #00cc66);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 255, 153, 0.4);
 }
 
 .themeButtonLight {
-  background: linear-gradient(45deg, #86efac, #4caf50);
+  background: linear-gradient(45deg, #ffcc99, #ff9966);
   color: #1f2937;
-  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 204, 153, 0.3);
 }
 
 .themeButton:hover {
   transform: scale(1.05);
-}
-
-.themeButtonDark:hover {
-  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.7);
-}
-
-.themeButtonLight:hover {
-  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 255, 153, 0.6);
 }
 
 .title {
-  font-size: clamp(1.2rem, 4vw, 3rem);
-  font-weight: 700;
+  font-size: clamp(1.2rem, 4vw, 2.5rem); /* Reduced from 1.5rem-3.5rem for smaller mobile size */
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: clamp(5px, 2vw, 15px);
-  text-shadow: 2px 2px 5px rgba(46, 125, 50, 0.5);
-  color: #ffff00;
-}
-
-.pointsDisplay {
-  font-size: clamp(1.2rem, 3vw, 2rem);
-  font-weight: 700;
-  color: #00ff00;
-  background: linear-gradient(45deg, #4caf50, #00ff00);
+  letter-spacing: 2px;
+  margin: clamp(20px, 5vw, 40px) auto; /* Increased top/bottom margin, centered */
+  background: linear-gradient(45deg, #ff6b6b, #ffe66d);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
-  margin-bottom: clamp(10px, 2vw, 20px);
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  text-align: center; /* Explicitly center-align */
+  width: 100%; /* Ensure it spans container for centering */
 }
 
-.pointsAnimation {
-  animation: pointsPulse 1s ease-in-out;
+.pointsDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(15px, 3vw, 25px);
+  padding: 15px 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 5; /* Below modal but above canvas */
 }
 
-@keyframes pointsPulse {
-  0% {
-    transform: scale(1);
-    text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
-  }
-  50% {
-    transform: scale(1.2);
-    text-shadow: 0 0 20px rgba(0, 255, 0, 1);
-  }
-  100% {
-    transform: scale(1);
-    text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
-  }
+.pointsDisplay.dark {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pointsDisplay.light {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.points {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  background: linear-gradient(45deg, #00ff99, #00ccff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 15px rgba(0, 255, 153, 0.6);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.userLabel {
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  color: #ff99cc;
+  font-weight: 600;
+}
+
+.userAddress {
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  color: #66ffcc;
+  font-weight: 500;
+}
+
+.rankLabel {
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  color: #ffcc66;
+  font-weight: 600;
+}
+
+.rankValue {
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  color: #ff6666;
+  font-weight: 500;
+}
+
+.disconnectButton {
+  padding: clamp(8px, 1.5vw, 12px) clamp(15px, 2.5vw, 20px);
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-weight: 700;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+
+.disconnectButtonDark {
+  background: linear-gradient(45deg, #ff3366, #cc0033);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
+}
+
+.disconnectButtonLight {
+  background: linear-gradient(45deg, #ff6699, #ff3366);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 102, 153, 0.3);
+}
+
+.disconnectButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 51, 102, 0.6);
 }
 
 .predictionContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(5px, 1vw, 10px);
-  margin-bottom: clamp(10px, 2vw, 20px);
+  gap: clamp(8px, 2vw, 15px);
+  margin-bottom: clamp(15px, 3vw, 25px);
   width: 100%;
   max-width: 700px;
+  min-height: 80px;
+  position: relative;
+  z-index: 5; /* Below modal but above canvas */
 }
 
 .predictionText {
-  font-size: clamp(0.9rem, 2vw, 1.5rem);
+  font-size: clamp(1rem, 2.5vw, 1.8rem);
   font-weight: 700;
-  color: #ffff00;
-  text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
 }
 
 .predictionRow {
   display: flex;
   flex-wrap: nowrap;
-  gap: clamp(5px, 1vw, 10px);
+  gap: clamp(8px, 1.5vw, 15px);
   justify-content: center;
   width: 100%;
 }
 
 .predictionButton {
-  padding: clamp(6px, 1.5vw, 10px) clamp(12px, 2vw, 20px);
-  font-size: clamp(0.7rem, 1.8vw, 1.2rem);
+  padding: clamp(8px, 2vw, 12px) clamp(15px, 3vw, 25px);
+  font-size: clamp(0.9rem, 2vw, 1.4rem);
   font-weight: 700;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   flex: 1;
-  min-width: 80px;
-  max-width: 120px;
+  min-width: 90px;
+  max-width: 130px;
 }
 
 .predictionButtonDark {
-  background: linear-gradient(45deg, #7c3aed, #4c1d95);
+  background: linear-gradient(45deg, #8a4af3, #5a2d9c);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 4px 15px rgba(138, 74, 243, 0.4);
 }
 
 .predictionButtonLight {
-  background: linear-gradient(45deg, #a78bfa, #7c3aed);
+  background: linear-gradient(45deg, #b19cd9, #8a4af3);
   color: #1f2937;
-  box-shadow: 0 4px 10px rgba(167, 139, 250, 0.3);
+  box-shadow: 0 4px 15px rgba(177, 156, 217, 0.3);
 }
 
 .predictionButton:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(138, 74, 243, 0.6);
 }
 
-.predictionButtonDark:hover {
-  box-shadow: 0 6px 15px rgba(124, 58, 237, 0.7);
+.connectWalletButton {
+  padding: clamp(8px, 2vw, 12px) clamp(20px, 3vw, 30px);
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  font-weight: 700;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+  white-space: nowrap;
+  min-width: 150px;
+  display: inline-block;
+  z-index: 5; /* Below modal but above canvas */
 }
 
-.predictionButtonLight:hover {
-  box-shadow: 0 6px 15px rgba(167, 139, 250, 0.5);
+.connectWalletButtonDark {
+  background: linear-gradient(45deg, #ff00cc, #6600ff);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 0, 204, 0.4);
+}
+
+.connectWalletButtonLight {
+  background: linear-gradient(45deg, #ff66cc, #ff00cc);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 102, 204, 0.3);
+}
+
+.connectWalletButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 0, 204, 0.6);
 }
 
 .predictionChoice {
-  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-size: clamp(0.9rem, 2.5vw, 1.4rem);
   font-weight: 700;
   color: #ff00ff;
-  text-shadow: 0 0 5px rgba(255, 0, 255, 0.7);
-  margin-bottom: clamp(5px, 1vw, 10px);
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
+  margin-bottom: clamp(8px, 2vw, 15px);
+  z-index: 5; /* Below modal */
 }
 
 .countdown {
-  font-size: clamp(0.8rem, 3vw, 2rem);
+  font-size: clamp(1rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  color: #ffff00;
-  text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-  margin-bottom: clamp(5px, 2vw, 10px);
-  z-index: 10;
+  color: #00ffcc;
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
+  margin-bottom: clamp(8px, 2vw, 15px);
+  z-index: 5; /* Below modal */
   animation: countdownAnimation 1s ease-in-out;
 }
 
 @keyframes countdownAnimation {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-    text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-    text-shadow: 0 0 15px rgba(255, 255, 0, 1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1);
-    text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-  }
+  0% { opacity: 0; transform: scale(0.8); text-shadow: 0 0 5px rgba(0, 255, 204, 0.7); }
+  50% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 15px rgba(0, 255, 204, 1); }
+  100% { opacity: 0; transform: scale(1); text-shadow: 0 0 5px rgba(0, 255, 204, 0.7); }
 }
 
 .scoreBoard {
   display: flex;
-  gap: clamp(5px, 1vw, 10px);
-  margin-bottom: clamp(5px, 2vw, 15px);
-  font-size: clamp(0.7rem, 2vw, 1.2rem);
-  font-weight: 400;
-  padding: clamp(5px, 1vw, 8px) clamp(10px, 2vw, 15px);
-  border-radius: 8px;
+  gap: clamp(8px, 1.5vw, 15px);
+  margin-bottom: clamp(10px, 2.5vw, 20px);
+  font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+  font-weight: 600;
+  padding: clamp(8px, 1.5vw, 12px) clamp(15px, 2.5vw, 20px);
+  border-radius: 12px;
   width: 100%;
   max-width: 700px;
   justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 5; /* Below modal */
 }
 
 .scoreBoardDark {
-  background-color: rgba(31, 41, 55, 0.8);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  background: rgba(31, 41, 55, 0.8);
 }
 
 .scoreBoardLight {
-  background-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .scoreBoard span {
@@ -228,19 +301,20 @@
 }
 
 .scoreBoard .highlight {
-  color: #00ff00;
+  color: #00ff99;
   font-size: 1.2em;
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+  text-shadow: 0 0 8px rgba(0, 255, 153, 0.7);
 }
 
 .gameCanvas {
   width: 95%;
   max-width: 700px;
   height: auto;
-  border: 4px solid #4caf50;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(46, 125, 50, 0.3);
-  margin-bottom: clamp(5px, 2vw, 15px);
+  border: 4px solid #00ff99;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 255, 153, 0.3);
+  margin-bottom: clamp(10px, 2.5vw, 20px);
+  z-index: 1; /* Lowest layer */
 }
 
 .modalOverlay {
@@ -249,65 +323,78 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(31, 41, 55, 0.6);
+  background: rgba(31, 41, 55, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000; /* Increased to ensure it’s above all content */
 }
 
 .modal {
-  padding: clamp(15px, 3vw, 25px);
-  border-radius: 16px;
+  padding: clamp(20px, 4vw, 30px);
+  border-radius: 20px;
   max-width: 90%;
-  width: 500px;
+  width: 550px;
   text-align: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1001; /* Above overlay */
+}
+
+.walletModal {
+  padding: clamp(20px, 4vw, 30px);
+  border-radius: 20px;
+  max-width: 90%;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1001; /* Above overlay */
 }
 
 .modalDark {
   background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(55, 65, 81, 0.9));
-  border: 2px solid #4caf50;
   color: #fff;
 }
 
 .modalLight {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(243, 244, 246, 0.9));
-  border: 2px solid #22c55e;
   color: #1f2937;
 }
 
 .modalTitle {
-  font-size: clamp(1rem, 3vw, 2rem);
+  font-size: clamp(1.2rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  color: #ffff00;
-  margin-bottom: clamp(10px, 2vw, 20px);
-  text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
+  color: #ffd700;
+  margin-bottom: clamp(15px, 3vw, 25px);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 }
 
 .modalText {
-  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-size: clamp(0.9rem, 2.5vw, 1.4rem);
   font-weight: 400;
-  margin-bottom: clamp(10px, 2vw, 20px);
+  margin-bottom: clamp(15px, 3vw, 25px);
   color: #e0e0e0;
 }
 
 .congratsText {
-  color: #00ff00;
+  color: #FFD700;
   font-weight: 700;
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 }
 
 .badLuckText {
-  color: #ff5555;
+  color: #ff6666;
   font-weight: 400;
-  text-shadow: 0 0 5px rgba(255, 85, 85, 0.7);
+  text-shadow: 0 0 8px rgba(255, 102, 102, 0.6);
 }
 
 .credits {
-  font-size: clamp(0.6rem, 1.5vw, 1rem);
+  font-size: clamp(0.7rem, 1.8vw, 1.2rem);
   font-weight: 400;
-  margin-top: clamp(10px, 2vw, 20px);
+  margin-top: clamp(15px, 3vw, 25px);
 }
 
 .creditsDark {
@@ -319,134 +406,187 @@
 }
 
 .highlightName {
-  background: linear-gradient(45deg, #4caf50, #ffff00);
+  background: linear-gradient(45deg, #00ff99, #ffd700);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   font-weight: 700;
-  text-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+  text-shadow: 0 0 8px rgba(0, 255, 153, 0.5);
 }
 
 .buttonContainer {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(10px, 2vw, 15px);
-  margin-top: clamp(10px, 2vw, 20px);
+  gap: clamp(15px, 3vw, 20px);
+  margin-top: clamp(15px, 3vw, 25px);
 }
 
 .shareButton {
-  padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
-  font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+  padding: clamp(10px, 2.5vw, 15px) clamp(20px, 3.5vw, 25px);
+  font-size: clamp(0.9rem, 2vw, 1.4rem);
   font-weight: 700;
   cursor: pointer;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   flex: 1;
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .shareButtonDark {
-  background: linear-gradient(45deg, #2563eb, #1e40af);
+  background: linear-gradient(45deg, #00ccff, #0066ff);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 204, 255, 0.4);
 }
 
 .shareButtonLight {
-  background: linear-gradient(45deg, #3b82f6, #2563eb);
+  background: linear-gradient(45deg, #66ccff, #00ccff);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 15px rgba(102, 204, 255, 0.3);
 }
 
 .shareButton:hover {
-  transform: translateY(-2px);
-}
-
-.shareButtonDark:hover {
-  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.7);
-}
-
-.shareButtonLight:hover {
-  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5);
-}
-
-.shareButton:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 204, 255, 0.6);
 }
 
 .closeButton {
-  padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
-  font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+  padding: clamp(10px, 2.5vw, 15px) clamp(20px, 3.5vw, 25px);
+  font-size: clamp(0.9rem, 2vw, 1.4rem);
   font-weight: 700;
   cursor: pointer;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   flex: 1;
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .closeButtonDark {
-  background: linear-gradient(45deg, #16a34a, #15803d);
+  background: linear-gradient(45deg, #00ff99, #009966);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 255, 153, 0.4);
 }
 
 .closeButtonLight {
-  background: linear-gradient(45deg, #22c55e, #16a34a);
+  background: linear-gradient(45deg, #66ffcc, #00ff99);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 15px rgba(102, 255, 204, 0.3);
 }
 
 .closeButton:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 255, 153, 0.6);
 }
 
-.closeButtonDark:hover {
-  box-shadow: 0 6px 15px rgba(22, 163, 74, 0.7);
+.walletOptions {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 2vw, 15px);
+  margin-bottom: clamp(15px, 3vw, 20px);
 }
 
-.closeButtonLight:hover {
-  box-shadow: 0 6px 15px rgba(34, 197, 94, 0.5);
+.walletButton {
+  padding: clamp(10px, 2.5vw, 15px) clamp(20px, 3.5vw, 25px);
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.closeButton:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 5px rgba(22, 163, 74, 0.3);
+.walletButtonDark {
+  background: linear-gradient(45deg, #ff6b6b, #cc3333);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.walletButtonLight {
+  background: linear-gradient(45deg, #ff9999, #ff6b6b);
+  color: #1f2937;
+  box-shadow: 0 4px 15px rgba(255, 153, 153, 0.3);
+}
+
+.walletButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
 }
 
 @media (max-width: 480px) {
   .container {
-    padding: 5px;
+    padding: clamp(10px, 3vw, 15px);
   }
   .title {
-    margin-bottom: 8px;
-    font-size: clamp(1rem, 3vw, 2rem);
+    margin-bottom: 15px;
+    font-size: clamp(1rem, 3vw, 2rem); /* Further reduced for mobile */
   }
   .pointsDisplay {
+    padding: 20px 30px;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    gap: 10px;
+  }
+  .disconnectButton {
+    padding: clamp(10px, 2.5vw, 15px) clamp(20px, 3.5vw, 25px);
     font-size: clamp(1rem, 2.5vw, 1.5rem);
   }
+  .userLabel, .userAddress, .rankLabel, .rankValue {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+  }
   .countdown {
-    margin-bottom: 5px;
-    font-size: clamp(0.8rem, 2.5vw, 1.5rem);
+    margin-bottom: 15px;
+    font-size: clamp(1.5rem, 5vw, 3rem);
+  }
+  .predictionContainer {
+    gap: clamp(10px, 2.5vw, 20px);
+  }
+  .predictionText {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  }
+  .predictionButton {
+    padding: clamp(10px, 2.5vw, 15px) clamp(20px, 3.5vw, 30px);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    min-width: 110px;
+  }
+  .connectWalletButton {
+    padding: clamp(8px, 2vw, 12px) clamp(18px, 3vw, 25px);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
   }
   .predictionChoice {
-    font-size: clamp(0.7rem, 1.8vw, 1rem);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    margin-bottom: 15px;
   }
   .scoreBoard {
-    gap: 3px;
-    padding: 5px 10px;
-    font-size: clamp(0.6rem, 1.8vw, 1rem);
+    gap: 8px;
+    padding: clamp(10px, 2.5vw, 15px) clamp(20px, 3.5vw, 25px);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
   }
-  .gameCanvas {
-    width: 100%;
-    max-width: none;
-  }
-  .modal {
+  .modal, .walletModal {
     width: 90%;
-    padding: clamp(10px, 2vw, 15px);
+    padding: clamp(25px, 5vw, 35px);
+  }
+  .modalTitle {
+    font-size: clamp(1.8rem, 5vw, 3rem);
+  }
+  .modalText {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+  }
+  .credits {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+  }
+  .buttonContainer {
+    gap: clamp(20px, 4vw, 25px);
+  }
+  .shareButton,
+  .closeButton {
+    padding: clamp(12px, 3vw, 18px) clamp(25px, 4.5vw, 30px);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    min-width: 140px;
+  }
+  .walletButton {
+    padding: clamp(12px, 3vw, 18px) clamp(25px, 4.5vw, 30px);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
   }
 }
 
@@ -454,4 +594,37 @@
   .gameCanvas {
     width: 90%;
   }
+}
+
+/* Enhanced Rank Styling */
+.rankHighlight {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+/* Leaderboard Button */
+.leaderboardButton {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.leaderboardButtonDark {
+  background: #4CAF50;
+  color: #ffffff;
+}
+
+.leaderboardButtonLight {
+  background: #81C784;
+  color: #1f2937;
+}
+
+.leaderboardButton:hover {
+  background: #388E3C;
 }
