@@ -55,7 +55,7 @@ export default function Game() {
   const initializeElements = (width: number, height: number) => {
     const elements: Element[] = [];
     const size = Math.max(Math.min(width * 0.04, 20), 12);
-    const speed = 0.7;
+    const speed = 0.8;
     const padding = size;
 
     for (let i = 0; i < 33; i++) {
