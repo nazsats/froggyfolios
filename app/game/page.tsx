@@ -253,7 +253,7 @@ export default function Game() {
         tweetText = "A wild battle unfolded in the Froggy Folios game!";
     }
 
-    tweetText += ` Final count: 🐸 ${counts.frog} | 🪲 ${counts.insect} | 🐍 ${counts.snake}. Play now at @FroggyFolios! https://froggyfolios.com/game`;
+    tweetText += ` Final count: 🐸 ${counts.frog} | 🪲 ${counts.insect} | 🐍 ${counts.snake}. Play now at @FroggyFolios! https://froggyfolios.xyz/game`;
 
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, "_blank", "width=600,height=400");
