@@ -28,6 +28,7 @@ export default function Game() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [prediction, setPrediction] = useState<"frog" | "insect" | "snake" | null>(null);
   const [points, setPoints] = useState<number>(0);
+  const [pointsAnimation, setPointsAnimation] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
@@ -104,8 +105,9 @@ export default function Game() {
     setCounts({ frog, insect, snake });
   };
 
-  const startCountdown = () => {
-    if (!isPlayingRef.current && canvasRef.current && prediction) {
+  const startGame = (predictedType: "frog" | "insect" | "snake") => {
+    if (!isPlayingRef.current && canvasRef.current) {
+      setPrediction(predictedType);
       setCountdown(3);
       const width = canvasRef.current.width;
       const height = canvasRef.current.height;
@@ -189,7 +191,9 @@ export default function Game() {
         if (elements[0].type === prediction) {
           const newPoints = points + 10;
           setPoints(newPoints);
+          setPointsAnimation(true);
           localStorage.setItem("points", newPoints.toString());
+          setTimeout(() => setPointsAnimation(false), 1000); // Reset animation after 1s
         }
         setIsModalOpen(true);
         confetti({
@@ -284,31 +288,35 @@ export default function Game() {
         </button>
       </div>
       <h1 className={styles.title}>Froggy Food Chain</h1>
-      <div className={styles.pointsDisplay}>Points: {points}</div>
+      <div className={`${styles.pointsDisplay} ${pointsAnimation ? styles.pointsAnimation : ""}`}>
+        Points: {points}
+      </div>
       {!prediction && !countdown && !isPlayingRef.current && (
         <div className={styles.predictionContainer}>
           <p className={styles.predictionText}>Who will win?</p>
-          <button
-            onClick={() => setPrediction("frog")}
-            className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
-          >
-            🐸 Frog
-          </button>
-          <button
-            onClick={() => setPrediction("insect")}
-            className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
-          >
-            🪲 Insect
-          </button>
-          <button
-            onClick={() => setPrediction("snake")}
-            className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
-          >
-            🐍 Snake
-          </button>
+          <div className={styles.predictionRow}>
+            <button
+              onClick={() => startGame("frog")}
+              className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+            >
+              🐸 Frog
+            </button>
+            <button
+              onClick={() => startGame("insect")}
+              className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+            >
+              🪲 Insect
+            </button>
+            <button
+              onClick={() => startGame("snake")}
+              className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+            >
+              🐍 Snake
+            </button>
+          </div>
         </div>
       )}
-      {prediction && countdown !== null && (
+      {countdown !== null && (
         <div className={styles.countdown} key={countdown}>
           Simulation begins in: {countdown}...
         </div>
@@ -325,14 +333,6 @@ export default function Game() {
         </span>
       </div>
       <canvas ref={canvasRef} className={styles.gameCanvas} />
-      {prediction && !countdown && !isPlayingRef.current && (
-        <button
-          onClick={startCountdown}
-          className={`${styles.playButton} ${theme === "dark" ? styles.playButtonDark : styles.playButtonLight}`}
-        >
-          Start Simulation
-        </button>
-      )}
 
       <Modal
         isOpen={isModalOpen}
