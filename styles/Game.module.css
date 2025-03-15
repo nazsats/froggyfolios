@@ -1,370 +1,433 @@
 /* styles/Game.module.css */
 
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    width: 100vw;
-    padding: clamp(5px, 2vw, 10px);
-    box-sizing: border-box;
-    font-family: "Poppins", sans-serif; /* Use Poppins globally */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
+  padding: clamp(5px, 2vw, 10px);
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+.dark {
+  background: linear-gradient(135deg, #166534, #1e40af, #6b21a8, #9d174d, #854d0e);
+  color: #fff;
+}
+
+.light {
+  background: linear-gradient(135deg, #86efac, #93c5fd, #d8b4fe, #f9a8d4, #fde68a);
+  color: #1f2937;
+}
+
+.themeToggle {
+  position: absolute;
+  top: clamp(5px, 1vw, 10px);
+  right: clamp(5px, 1vw, 10px);
+}
+
+.themeButton {
+  padding: 8px 16px;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.themeButtonDark {
+  background: linear-gradient(45deg, #4caf50, #2e7d32);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.5);
+}
+
+.themeButtonLight {
+  background: linear-gradient(45deg, #86efac, #4caf50);
+  color: #1f2937;
+  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+}
+
+.themeButton:hover {
+  transform: scale(1.05);
+}
+
+.themeButtonDark:hover {
+  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.7);
+}
+
+.themeButtonLight:hover {
+  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.5);
+}
+
+.title {
+  font-size: clamp(1.2rem, 4vw, 3rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: clamp(5px, 2vw, 15px);
+  text-shadow: 2px 2px 5px rgba(46, 125, 50, 0.5);
+  color: #ffff00;
+}
+
+.pointsDisplay {
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: #00ff00;
+  margin-bottom: clamp(5px, 1vw, 10px);
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+.predictionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(5px, 1vw, 10px);
+  margin-bottom: clamp(10px, 2vw, 20px);
+}
+
+.predictionText {
+  font-size: clamp(0.9rem, 2vw, 1.5rem);
+  font-weight: 700;
+  color: #ffff00;
+  text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
+}
+
+.predictionButton {
+  padding: clamp(6px, 1.5vw, 10px) clamp(12px, 3vw, 20px);
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.predictionButtonDark {
+  background: linear-gradient(45deg, #7c3aed, #4c1d95);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.5);
+}
+
+.predictionButtonLight {
+  background: linear-gradient(45deg, #a78bfa, #7c3aed);
+  color: #1f2937;
+  box-shadow: 0 4px 10px rgba(167, 139, 250, 0.3);
+}
+
+.predictionButton:hover {
+  transform: translateY(-2px);
+}
+
+.predictionButtonDark:hover {
+  box-shadow: 0 6px 15px rgba(124, 58, 237, 0.7);
+}
+
+.predictionButtonLight:hover {
+  box-shadow: 0 6px 15px rgba(167, 139, 250, 0.5);
+}
+
+.countdown {
+  font-size: clamp(0.8rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #ffff00;
+  text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
+  margin-bottom: clamp(5px, 2vw, 10px);
+  z-index: 10;
+  animation: countdownAnimation 1s ease-in-out;
+}
+
+@keyframes countdownAnimation {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+    text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
   }
-  
-  .dark {
-    background: linear-gradient(135deg, #166534, #1e40af, #6b21a8, #9d174d, #854d0e);
-    color: #fff;
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+    text-shadow: 0 0 15px rgba(255, 255, 0, 1);
   }
-  
-  .light {
-    background: linear-gradient(135deg, #86efac, #93c5fd, #d8b4fe, #f9a8d4, #fde68a);
-    color: #1f2937;
+  100% {
+    opacity: 0;
+    transform: scale(1);
+    text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
   }
-  
-  .themeToggle {
-    position: absolute;
-    top: clamp(5px, 1vw, 10px);
-    right: clamp(5px, 1vw, 10px);
+}
+
+.scoreBoard {
+  display: flex;
+  gap: clamp(5px, 1vw, 10px);
+  margin-bottom: clamp(5px, 2vw, 15px);
+  font-size: clamp(0.7rem, 2vw, 1.2rem);
+  font-weight: 400;
+  padding: clamp(5px, 1vw, 8px) clamp(10px, 2vw, 15px);
+  border-radius: 8px;
+}
+
+.scoreBoardDark {
+  background-color: rgba(31, 41, 55, 0.8);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.scoreBoardLight {
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.scoreBoard span {
+  font-weight: 700;
+}
+
+.scoreBoard .highlight {
+  color: #00ff00;
+  font-size: 1.2em;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+}
+
+.gameCanvas {
+  width: 95%;
+  max-width: 700px;
+  height: auto;
+  border: 4px solid #4caf50;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(46, 125, 50, 0.3);
+  margin-bottom: clamp(5px, 2vw, 15px);
+}
+
+.playButton {
+  padding: clamp(6px, 2vw, 10px) clamp(15px, 4vw, 25px);
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  border-radius: 25px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.playButtonDark {
+  background: linear-gradient(45deg, #16a34a, #15803d);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.5);
+}
+
+.playButtonLight {
+  background: linear-gradient(45deg, #22c55e, #16a34a);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+.playButton:hover {
+  transform: translateY(-3px);
+}
+
+.playButtonDark:hover {
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.7);
+}
+
+.playButtonLight:hover {
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+}
+
+.playButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.3);
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(31, 41, 55, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  padding: clamp(15px, 3vw, 25px);
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+}
+
+.modalDark {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(55, 65, 81, 0.9));
+  border: 2px solid #4caf50;
+  color: #fff;
+}
+
+.modalLight {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(243, 244, 246, 0.9));
+  border: 2px solid #22c55e;
+  color: #1f2937;
+}
+
+.modalTitle {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #ffff00;
+  margin-bottom: clamp(10px, 2vw, 20px);
+  text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
+}
+
+.modalText {
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  font-weight: 400;
+  margin-bottom: clamp(10px, 2vw, 20px);
+}
+
+.credits {
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  font-weight: 400;
+  margin-top: clamp(10px, 2vw, 20px);
+}
+
+.creditsDark {
+  color: #d1d5db;
+}
+
+.creditsLight {
+  color: #4b5563;
+}
+
+.highlightName {
+  background: linear-gradient(45deg, #4caf50, #ffff00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 15px);
+  margin-top: clamp(10px, 2vw, 20px);
+}
+
+.shareButton {
+  padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
+  font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shareButtonDark {
+  background: linear-gradient(45deg, #2563eb, #1e40af);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.5);
+}
+
+.shareButtonLight {
+  background: linear-gradient(45deg, #3b82f6, #2563eb);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+.shareButton:hover {
+  transform: translateY(-2px);
+}
+
+.shareButtonDark:hover {
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.7);
+}
+
+.shareButtonLight:hover {
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5);
+}
+
+.shareButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
+}
+
+.closeButton {
+  padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
+  font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.closeButtonDark {
+  background: linear-gradient(45deg, #16a34a, #15803d);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
+}
+
+.closeButtonLight {
+  background: linear-gradient(45deg, #22c55e, #16a34a);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+}
+
+.closeButton:hover {
+  transform: translateY(-2px);
+}
+
+.closeButtonDark:hover {
+  box-shadow: 0 6px 15px rgba(22, 163, 74, 0.7);
+}
+
+.closeButtonLight:hover {
+  box-shadow: 0 6px 15px rgba(34, 197, 94, 0.5);
+}
+
+.closeButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 5px rgba(22, 163, 74, 0.3);
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 5px;
   }
-  
-  .themeButton {
-    padding: 8px 16px;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .themeButtonDark {
-    background: linear-gradient(45deg, #4caf50, #2e7d32);
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.5);
-  }
-  
-  .themeButtonLight {
-    background: linear-gradient(45deg, #86efac, #4caf50);
-    color: #1f2937;
-    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
-  }
-  
-  .themeButton:hover {
-    transform: scale(1.05);
-  }
-  
-  .themeButtonDark:hover {
-    box-shadow: 0 6px 15px rgba(46, 125, 50, 0.7);
-  }
-  
-  .themeButtonLight:hover {
-    box-shadow: 0 6px 15px rgba(46, 125, 50, 0.5);
-  }
-  
   .title {
-    font-size: clamp(1.2rem, 4vw, 3rem);
-    font-weight: 700; /* Poppins bold */
-    text-transform: uppercase;
-    letter-spacing: 1px; /* Adjusted for Poppins */
-    margin-bottom: clamp(5px, 2vw, 15px);
-    text-shadow: 2px 2px 5px rgba(46, 125, 50, 0.5);
-    color: #ffff00;
+    margin-bottom: 8px;
   }
-  
   .countdown {
-    font-size: clamp(0.8rem, 3vw, 2rem);
-    font-weight: 700;
-    color: #ffff00;
-    text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-    margin-bottom: clamp(5px, 2vw, 10px);
-    z-index: 10;
-    animation: countdownAnimation 1s ease-in-out;
+    margin-bottom: 5px;
   }
-  
-  @keyframes countdownAnimation {
-    0% {
-      opacity: 0;
-      transform: scale(0.8);
-      text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.1);
-      text-shadow: 0 0 15px rgba(255, 255, 0, 1);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1);
-      text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-    }
-  }
-  
   .scoreBoard {
-    display: flex;
-    gap: clamp(5px, 1vw, 10px);
-    margin-bottom: clamp(5px, 2vw, 15px);
-    font-size: clamp(0.7rem, 2vw, 1.2rem);
-    font-weight: 400;
-    padding: clamp(5px, 1vw, 8px) clamp(10px, 2vw, 15px);
-    border-radius: 8px;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px 10px;
   }
-  
-  .scoreBoardDark {
-    background-color: rgba(31, 41, 55, 0.8);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  }
-  
-  .scoreBoardLight {
-    background-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .scoreBoard span {
-    font-weight: 700;
-  }
-  
-  .scoreBoard .highlight {
-    color: #00ff00;
-    font-size: 1.2em;
-    text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
-  }
-  
   .gameCanvas {
-    width: 95%;
-    max-width: 700px;
-    height: auto;
-    border: 4px solid #4caf50;
-    border-radius: 12px;
-    box-shadow: 0 0 15px rgba(46, 125, 50, 0.3);
-    margin-bottom: clamp(5px, 2vw, 15px);
+    width: 100%;
+    max-width: none;
   }
-  
   .playButton {
-    padding: clamp(6px, 2vw, 10px) clamp(15px, 4vw, 25px);
-    font-size: clamp(0.8rem, 2vw, 1.2rem);
-    font-weight: 700;
-    text-transform: uppercase;
-    cursor: pointer;
-    border: none;
-    border-radius: 25px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 6px 15px;
   }
-  
-  .playButtonDark {
-    background: linear-gradient(45deg, #16a34a, #15803d);
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(22, 163, 74, 0.5);
+  .predictionContainer {
+    gap: 5px;
   }
-  
-  .playButtonLight {
-    background: linear-gradient(45deg, #22c55e, #16a34a);
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  .predictionButton {
+    padding: 6px 12px;
   }
-  
-  .playButton:hover {
-    transform: translateY(-3px);
-  }
-  
-  .playButtonDark:hover {
-    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.7);
-  }
-  
-  .playButtonLight:hover {
-    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
-  }
-  
-  .playButton:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 10px rgba(22, 163, 74, 0.3);
-  }
-  
-  .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(31, 41, 55, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .modal {
-    padding: clamp(15px, 3vw, 25px);
-    border-radius: 16px;
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(5px);
-  }
-  
-  .modalDark {
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(55, 65, 81, 0.9));
-    border: 2px solid #4caf50;
-    color: #fff;
-  }
-  
-  .modalLight {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(243, 244, 246, 0.9));
-    border: 2px solid #22c55e;
-    color: #1f2937;
-  }
-  
-  .modalTitle {
-    font-size: clamp(1.2rem, 3vw, 2rem);
-    font-weight: 700;
-    color: #ffff00;
-    margin-bottom: clamp(10px, 2vw, 20px);
-    text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
-  }
-  
-  .modalText {
-    font-size: clamp(0.9rem, 2vw, 1.2rem);
-    font-weight: 400;
-    margin-bottom: clamp(10px, 2vw, 20px);
-  }
-  
-  .credits {
-    font-size: clamp(0.7rem, 1.5vw, 1rem);
-    font-weight: 400;
-    margin-top: clamp(10px, 2vw, 20px);
-  }
-  
-  .creditsDark {
-    color: #d1d5db;
-  }
-  
-  .creditsLight {
-    color: #4b5563;
-  }
-  
-  .highlightName {
-    background: linear-gradient(45deg, #4caf50, #ffff00);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    font-weight: 700;
-    text-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
-  }
-  
   .buttonContainer {
-    display: flex;
-    justify-content: center;
-    gap: clamp(10px, 2vw, 15px);
-    margin-top: clamp(10px, 2vw, 20px);
+    flex-direction: column;
+    gap: 8px;
   }
-  
-  .shareButton {
-    padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
-    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .gameCanvas {
+    width: 90%;
   }
-  
-  .shareButtonDark {
-    background: linear-gradient(45deg, #2563eb, #1e40af);
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.5);
-  }
-  
-  .shareButtonLight {
-    background: linear-gradient(45deg, #3b82f6, #2563eb);
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-  }
-  
-  .shareButton:hover {
-    transform: translateY(-2px);
-  }
-  
-  .shareButtonDark:hover {
-    box-shadow: 0 6px 15px rgba(37, 99, 235, 0.7);
-  }
-  
-  .shareButtonLight:hover {
-    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5);
-  }
-  
-  .shareButton:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
-  }
-  
-  .closeButton {
-    padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
-    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .closeButtonDark {
-    background: linear-gradient(45deg, #16a34a, #15803d);
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
-  }
-  
-  .closeButtonLight {
-    background: linear-gradient(45deg, #22c55e, #16a34a);
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
-  }
-  
-  .closeButton:hover {
-    transform: translateY(-2px);
-  }
-  
-  .closeButtonDark:hover {
-    box-shadow: 0 6px 15px rgba(22, 163, 74, 0.7);
-  }
-  
-  .closeButtonLight:hover {
-    box-shadow: 0 6px 15px rgba(34, 197, 94, 0.5);
-  }
-  
-  .closeButton:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 5px rgba(22, 163, 74, 0.3);
-  }
-  
-  @media (max-width: 480px) {
-    .container {
-      padding: 5px;
-    }
-    .title {
-      margin-bottom: 8px;
-    }
-    .countdown {
-      margin-bottom: 5px;
-    }
-    .scoreBoard {
-      flex-direction: column;
-      gap: 3px;
-      padding: 5px 10px;
-    }
-    .gameCanvas {
-      width: 100%;
-      max-width: none;
-    }
-    .playButton {
-      padding: 6px 15px;
-    }
-    .buttonContainer {
-      flex-direction: column;
-      gap: 8px;
-    }
-  }
-  
-  @media (min-width: 481px) and (max-width: 768px) {
-    .gameCanvas {
-      width: 90%;
-    }
-  }
+}

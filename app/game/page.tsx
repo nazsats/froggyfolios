@@ -26,10 +26,15 @@ export default function Game() {
   const insectImgRef = useRef<HTMLImageElement | null>(null);
   const snakeImgRef = useRef<HTMLImageElement | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [prediction, setPrediction] = useState<"frog" | "insect" | "snake" | null>(null);
+  const [points, setPoints] = useState<number>(0);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
     setTheme(savedTheme || "dark");
+
+    const savedPoints = localStorage.getItem("points");
+    setPoints(savedPoints ? parseInt(savedPoints, 10) : 0);
 
     if (typeof window !== "undefined") {
       const appElement = document.querySelector("#__next");
@@ -100,7 +105,7 @@ export default function Game() {
   };
 
   const startCountdown = () => {
-    if (!isPlayingRef.current && canvasRef.current) {
+    if (!isPlayingRef.current && canvasRef.current && prediction) {
       setCountdown(3);
       const width = canvasRef.current.width;
       const height = canvasRef.current.height;
@@ -134,7 +139,7 @@ export default function Game() {
 
     if (!isPlayingRef.current) {
       const size = Math.min(width * 0.15, 80);
-      ctx.font = `${size * 0.5}px "Poppins", sans-serif`; // Use Poppins for VS text
+      ctx.font = `${size * 0.5}px "Poppins", sans-serif`;
       ctx.fillStyle = theme === "dark" ? "#ffffff" : "#1f2937";
       ctx.textAlign = "center";
       if (frogImgRef.current) ctx.drawImage(frogImgRef.current, width * 0.25 - size / 2, height / 2 - size / 2, size, size);
@@ -181,6 +186,11 @@ export default function Game() {
       if (allSame) {
         isPlayingRef.current = false;
         setWinner(elements[0].type);
+        if (elements[0].type === prediction) {
+          const newPoints = points + 10;
+          setPoints(newPoints);
+          localStorage.setItem("points", newPoints.toString());
+        }
         setIsModalOpen(true);
         confetti({
           particleCount: 100,
@@ -253,10 +263,17 @@ export default function Game() {
         tweetText = "A wild battle unfolded in the Froggy Folios game!";
     }
 
-    tweetText += ` Final count: 🐸 ${counts.frog} | 🪲 ${counts.insect} | 🐍 ${counts.snake}. Play now at @FroggyFolios! https://froggyfolios.xyz/game`;
+    tweetText += ` Final count: 🐸 ${counts.frog} | 🪲 ${counts.insect} | 🐍 ${counts.snake}. I predicted ${prediction} and have ${points} points! Play now at @FroggyFolios! https://froggyfolios.xyz/game`;
 
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, "_blank", "width=600,height=400");
+  };
+
+  const resetGame = () => {
+    setIsModalOpen(false);
+    setWinner(null);
+    setPrediction(null);
+    setCounts({ frog: 33, insect: 33, snake: 33 });
   };
 
   return (
@@ -267,7 +284,31 @@ export default function Game() {
         </button>
       </div>
       <h1 className={styles.title}>Froggy Food Chain</h1>
-      {countdown !== null && (
+      <div className={styles.pointsDisplay}>Points: {points}</div>
+      {!prediction && !countdown && !isPlayingRef.current && (
+        <div className={styles.predictionContainer}>
+          <p className={styles.predictionText}>Who will win?</p>
+          <button
+            onClick={() => setPrediction("frog")}
+            className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+          >
+            🐸 Frog
+          </button>
+          <button
+            onClick={() => setPrediction("insect")}
+            className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+          >
+            🪲 Insect
+          </button>
+          <button
+            onClick={() => setPrediction("snake")}
+            className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+          >
+            🐍 Snake
+          </button>
+        </div>
+      )}
+      {prediction && countdown !== null && (
         <div className={styles.countdown} key={countdown}>
           Simulation begins in: {countdown}...
         </div>
@@ -284,16 +325,18 @@ export default function Game() {
         </span>
       </div>
       <canvas ref={canvasRef} className={styles.gameCanvas} />
-      <button
-        onClick={startCountdown}
-        className={`${styles.playButton} ${theme === "dark" ? styles.playButtonDark : styles.playButtonLight}`}
-      >
-        Start Simulation
-      </button>
+      {prediction && !countdown && !isPlayingRef.current && (
+        <button
+          onClick={startCountdown}
+          className={`${styles.playButton} ${theme === "dark" ? styles.playButtonDark : styles.playButtonLight}`}
+        >
+          Start Simulation
+        </button>
+      )}
 
       <Modal
         isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
+        onRequestClose={resetGame}
         className={`${styles.modal} ${theme === "dark" ? styles.modalDark : styles.modalLight}`}
         overlayClassName={styles.modalOverlay}
       >
@@ -304,7 +347,13 @@ export default function Game() {
             ? "Insects have overrun the habitat!"
             : "Snakes have claimed supremacy!"}
         </h2>
+        <p className={styles.modalText}>
+          {winner === prediction
+            ? "Congratulations! You predicted correctly! +10 points!"
+            : "Bad luck this time! Play again?"}
+        </p>
         <p className={styles.modalText}>Final Count: 🐸 {counts.frog} | 🪲 {counts.insect} | 🐍 {counts.snake}</p>
+        <p className={styles.modalText}>Your Points: {points}</p>
         <p className={`${styles.credits} ${theme === "dark" ? styles.creditsDark : styles.creditsLight}`}>
           Developed by <span className={styles.highlightName}>Froggy Folios</span>
         </p>
@@ -316,10 +365,10 @@ export default function Game() {
             Share on X
           </button>
           <button
-            onClick={() => setIsModalOpen(false)}
+            onClick={resetGame}
             className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
           >
-            Close
+            Play Again
           </button>
         </div>
       </Modal>
