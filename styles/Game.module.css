@@ -72,10 +72,10 @@
 }
 
 .pointsDisplay {
-  font-size: clamp(1.2rem, 3vw, 2rem); /* Larger text */
+  font-size: clamp(1.2rem, 3vw, 2rem);
   font-weight: 700;
   color: #00ff00;
-  background: linear-gradient(45deg, #4caf50, #00ff00); /* Eye-catching gradient */
+  background: linear-gradient(45deg, #4caf50, #00ff00);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -108,6 +108,8 @@
   align-items: center;
   gap: clamp(5px, 1vw, 10px);
   margin-bottom: clamp(10px, 2vw, 20px);
+  width: 100%;
+  max-width: 700px;
 }
 
 .predictionText {
@@ -119,17 +121,23 @@
 
 .predictionRow {
   display: flex;
+  flex-wrap: nowrap;
   gap: clamp(5px, 1vw, 10px);
+  justify-content: center;
+  width: 100%;
 }
 
 .predictionButton {
-  padding: clamp(6px, 1.5vw, 10px) clamp(12px, 3vw, 20px);
-  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  padding: clamp(6px, 1.5vw, 10px) clamp(12px, 2vw, 20px);
+  font-size: clamp(0.7rem, 1.8vw, 1.2rem);
   font-weight: 700;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex: 1;
+  min-width: 80px;
+  max-width: 120px;
 }
 
 .predictionButtonDark {
@@ -154,6 +162,14 @@
 
 .predictionButtonLight:hover {
   box-shadow: 0 6px 15px rgba(167, 139, 250, 0.5);
+}
+
+.predictionChoice {
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: #ff00ff;
+  text-shadow: 0 0 5px rgba(255, 0, 255, 0.7);
+  margin-bottom: clamp(5px, 1vw, 10px);
 }
 
 .countdown {
@@ -192,6 +208,9 @@
   font-weight: 400;
   padding: clamp(5px, 1vw, 8px) clamp(10px, 2vw, 15px);
   border-radius: 8px;
+  width: 100%;
+  max-width: 700px;
+  justify-content: center;
 }
 
 .scoreBoardDark {
@@ -239,8 +258,8 @@
 .modal {
   padding: clamp(15px, 3vw, 25px);
   border-radius: 16px;
-  max-width: 500px;
-  width: 90%;
+  max-width: 90%;
+  width: 500px;
   text-align: center;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(5px);
@@ -259,7 +278,7 @@
 }
 
 .modalTitle {
-  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-size: clamp(1rem, 3vw, 2rem);
   font-weight: 700;
   color: #ffff00;
   margin-bottom: clamp(10px, 2vw, 20px);
@@ -267,13 +286,26 @@
 }
 
 .modalText {
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
   font-weight: 400;
   margin-bottom: clamp(10px, 2vw, 20px);
+  color: #e0e0e0;
+}
+
+.congratsText {
+  color: #00ff00;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+}
+
+.badLuckText {
+  color: #ff5555;
+  font-weight: 400;
+  text-shadow: 0 0 5px rgba(255, 85, 85, 0.7);
 }
 
 .credits {
-  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  font-size: clamp(0.6rem, 1.5vw, 1rem);
   font-weight: 400;
   margin-top: clamp(10px, 2vw, 20px);
 }
@@ -297,6 +329,7 @@
 
 .buttonContainer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: clamp(10px, 2vw, 15px);
   margin-top: clamp(10px, 2vw, 20px);
@@ -310,6 +343,8 @@
   border: none;
   border-radius: 8px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex: 1;
+  min-width: 100px;
 }
 
 .shareButtonDark {
@@ -349,6 +384,8 @@
   border: none;
   border-radius: 8px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex: 1;
+  min-width: 100px;
 }
 
 .closeButtonDark {
@@ -386,32 +423,30 @@
   }
   .title {
     margin-bottom: 8px;
+    font-size: clamp(1rem, 3vw, 2rem);
   }
   .pointsDisplay {
     font-size: clamp(1rem, 2.5vw, 1.5rem);
   }
   .countdown {
     margin-bottom: 5px;
+    font-size: clamp(0.8rem, 2.5vw, 1.5rem);
+  }
+  .predictionChoice {
+    font-size: clamp(0.7rem, 1.8vw, 1rem);
   }
   .scoreBoard {
-    flex-direction: column;
     gap: 3px;
     padding: 5px 10px;
+    font-size: clamp(0.6rem, 1.8vw, 1rem);
   }
   .gameCanvas {
     width: 100%;
     max-width: none;
   }
-  .predictionRow {
-    flex-direction: column;
-    gap: 5px;
-  }
-  .predictionButton {
-    padding: 6px 12px;
-  }
-  .buttonContainer {
-    flex-direction: column;
-    gap: 8px;
+  .modal {
+    width: 90%;
+    padding: clamp(10px, 2vw, 15px);
   }
 }
 

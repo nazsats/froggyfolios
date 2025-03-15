@@ -35,7 +35,9 @@ export default function Game() {
     setTheme(savedTheme || "dark");
 
     const savedPoints = localStorage.getItem("points");
-    setPoints(savedPoints ? parseInt(savedPoints, 10) : 0);
+    if (savedPoints) {
+      setPoints(parseInt(savedPoints, 10));
+    }
 
     if (typeof window !== "undefined") {
       const appElement = document.querySelector("#__next");
@@ -189,11 +191,13 @@ export default function Game() {
         isPlayingRef.current = false;
         setWinner(elements[0].type);
         if (elements[0].type === prediction) {
-          const newPoints = points + 10;
-          setPoints(newPoints);
-          setPointsAnimation(true);
-          localStorage.setItem("points", newPoints.toString());
-          setTimeout(() => setPointsAnimation(false), 1000); // Reset animation after 1s
+          setPoints((prev) => {
+            const newPoints = prev + 10;
+            localStorage.setItem("points", newPoints.toString());
+            setPointsAnimation(true);
+            setTimeout(() => setPointsAnimation(false), 1000);
+            return newPoints;
+          });
         }
         setIsModalOpen(true);
         confetti({
@@ -321,6 +325,11 @@ export default function Game() {
           Simulation begins in: {countdown}...
         </div>
       )}
+      {prediction && (countdown !== null || isPlayingRef.current) && (
+        <div className={styles.predictionChoice}>
+          You chose: {prediction === "frog" ? "🐸 Frog" : prediction === "insect" ? "🪲 Insect" : "🐍 Snake"}
+        </div>
+      )}
       <div className={`${styles.scoreBoard} ${theme === "dark" ? styles.scoreBoardDark : styles.scoreBoardLight}`}>
         <span className={getLeadingElement() === "frog" ? styles.highlight : ""}>
           🐸 {counts.frog}
@@ -347,7 +356,7 @@ export default function Game() {
             ? "Insects have overrun the habitat!"
             : "Snakes have claimed supremacy!"}
         </h2>
-        <p className={styles.modalText}>
+        <p className={`${styles.modalText} ${winner === prediction ? styles.congratsText : styles.badLuckText}`}>
           {winner === prediction
             ? "Congratulations! You predicted correctly! +10 points!"
             : "Bad luck this time! Play again?"}
