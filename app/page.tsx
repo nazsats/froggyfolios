@@ -12,58 +12,10 @@ export default function Home() {
   const [showPopup, setShowPopup] = useState(false);
   const [whitelistType, setWhitelistType] = useState(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [blocksRemaining, setBlocksRemaining] = useState<number | null>(null);
-  const [currentHeight, setCurrentHeight] = useState<number | null>(null);
-  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
-  const targetBlock = 888888;
-  const averageBlockTime = 600; // 10 minutes in seconds
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
     setTheme(savedTheme || "dark");
-  }, []);
-
-  // Fetch block height and initialize timer
-  useEffect(() => {
-    const fetchBlockHeight = async () => {
-      try {
-        const response = await fetch("https://mempool.space/api/blocks/tip/height");
-        if (!response.ok) throw new Error("Failed to fetch from primary API");
-        const height = await response.json();
-        setCurrentHeight(height);
-        const blocksLeft = targetBlock - height;
-        setBlocksRemaining(blocksLeft);
-        setSecondsRemaining(blocksLeft * averageBlockTime);
-      } catch (error) {
-        console.error("Primary API failed, trying fallback:", error);
-        try {
-          const fallbackResponse = await fetch("https://blockchain.info/q/getblockcount");
-          const height = await fallbackResponse.json();
-          setCurrentHeight(height);
-          const blocksLeft = targetBlock - height;
-          setBlocksRemaining(blocksLeft);
-          setSecondsRemaining(blocksLeft * averageBlockTime);
-        } catch (fallbackError) {
-          console.error("Fallback API failed:", fallbackError);
-          setBlocksRemaining(null);
-          setCurrentHeight(null);
-          setSecondsRemaining(null);
-        }
-      }
-    };
-
-    fetchBlockHeight();
-    const blockInterval = setInterval(fetchBlockHeight, 60000); // Update block height every minute
-
-    // Real-time countdown
-    const timer = setInterval(() => {
-      setSecondsRemaining((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
-    }, 1000); // Update every second
-
-    return () => {
-      clearInterval(blockInterval);
-      clearInterval(timer);
-    };
   }, []);
 
   const toggleTheme = () => {
@@ -112,16 +64,6 @@ export default function Home() {
     window.open("https://twitter.com/intent/follow?screen_name=FroggyFolios", "_blank");
   };
 
-  const getEstimatedTime = () => {
-    if (secondsRemaining === null) return "Loading...";
-    if (secondsRemaining <= 0) return "Target Reached!";
-    
-    const hours = Math.floor(secondsRemaining / 3600);
-    const minutes = Math.floor((secondsRemaining % 3600) / 60);
-    const seconds = secondsRemaining % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
-
   return (
     <div
       className={`min-h-screen flex flex-col px-4 ${
@@ -150,80 +92,8 @@ export default function Home() {
         </motion.button>
       </div>
 
-      {/* Trendy Bitcoin Block Countdown */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className={`mt-24 md:mt-32 mb-10 w-full max-w-2xl mx-auto relative`}
-      >
-        <div
-          className={`rounded-3xl p-6 backdrop-blur-lg shadow-2xl overflow-hidden ${
-            theme === "dark"
-              ? "bg-gradient-to-r from-gray-900/90 to-blue-900/90 border border-gray-700"
-              : "bg-gradient-to-r from-white/90 to-blue-100/90 border border-gray-200"
-          }`}
-        >
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"
-            animate={{ x: ["-100%", "100%"] }}
-            transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-          />
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
-              Bitcoin Block #{targetBlock}
-            </h2>
-            <div className="flex justify-center items-center gap-6">
-              <div className="text-center">
-                <p className="text-sm uppercase tracking-wider opacity-80">Current Block</p>
-                <motion.p
-                  className="text-2xl md:text-3xl font-bold"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {currentHeight !== null ? currentHeight : "Loading..."}
-                </motion.p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm uppercase tracking-wider opacity-80">Blocks Left</p>
-                <motion.p
-                  className="text-2xl md:text-3xl font-bold text-blue-400"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {blocksRemaining !== null ? blocksRemaining : "..."}
-                </motion.p>
-              </div>
-            </div>
-            <motion.div
-              className="mt-4 text-center"
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <p className="text-sm uppercase tracking-wider opacity-80">Est. Time Remaining</p>
-              <p className="text-xl md:text-2xl font-mono font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                {getEstimatedTime()}
-              </p>
-            </motion.div>
-          </div>
-        </div>
-        <motion.div
-          className="absolute -top-4 -right-4"
-          animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          <Image
-            src="/bitcoin-logo.png"
-            alt="Bitcoin"
-            width={60}
-            height={60}
-            className="opacity-80 drop-shadow-lg"
-          />
-        </motion.div>
-      </motion.div>
-
       {/* Main Content Container */}
-      <div className="w-full max-w-5xl mx-auto flex-grow flex items-center justify-center mb-10">
+      <div className="w-full max-w-5xl mx-auto flex-grow flex items-center justify-center mb-10 mt-24 md:mt-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -379,7 +249,7 @@ export default function Home() {
               transition={{ duration: 0.5, type: "spring" }}
               className={`max-w-md w-full p-8 ${
                 theme === "dark"
-                  ? "bg-gradient-to-br from-gray-700 via-blue-700 to-gray-700"
+                  ? "bg-gradient-to-br from-gray-7 00 via-blue-700 to-gray-700"
                   : "bg-gradient-to-br from-gray-200 via-blue-200 to-gray-200"
               } rounded-2xl shadow-2xl border ${theme === "dark" ? "border-gray-700" : "border-gray-200"} relative overflow-hidden flex flex-col items-center justify-center`}
             >
