@@ -25,22 +25,24 @@ interface WalletAddress {
   addressType?: string;
 }
 
-// Define a type for Xverse addresses
 interface XverseAddress {
   address: string;
-  purpose: "payment" | "ordinals"; // Xverse uses string literals, not AddressPurpose
-  [key: string]: any; // Allow additional properties
+  purpose: "payment" | "ordinals";
+  [key: string]: any;
 }
 
 declare global {
   interface Window {
-    magicEden?: {
-      bitcoin: any;
-    };
+    magicEden?: { bitcoin: any };
     unisat?: {
       requestAccounts: () => Promise<string[]>;
       getAccounts: () => Promise<string[]>;
       [key: string]: any;
+    };
+    XverseProviders?: {
+      BitcoinProvider?: {
+        request: (method: string, params: any) => Promise<any>;
+      };
     };
   }
 }
@@ -76,19 +78,47 @@ export default function Leaderboard() {
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch Game 1 scores from game_users
+      const { data: game1Data, error: game1Error } = await supabase
         .from("game_users")
-        .select("address, points")
-        .order("points", { ascending: false });
+        .select("address, points");
 
-      if (error) throw error;
+      if (game1Error) throw game1Error;
+      console.log("Game 1 Data (game_users):", game1Data);
 
-      const rankedData = data.map((entry, index) => ({
-        rank: index + 1,
-        address: entry.address,
-        points: entry.points,
-      }));
+      // Fetch Game 2 scores from player_scores
+      const { data: game2Data, error: game2Error } = await supabase
+        .from("player_scores")
+        .select("wallet_address, total_score");
 
+      if (game2Error) throw game2Error;
+      console.log("Game 2 Data (player_scores):", game2Data);
+
+      // Combine scores
+      const combinedScores: { [address: string]: number } = {};
+
+      // Process Game 1 scores
+      game1Data.forEach((entry) => {
+        combinedScores[entry.address] = (combinedScores[entry.address] || 0) + entry.points;
+      });
+
+      // Process Game 2 scores (mapping wallet_address to address)
+      game2Data.forEach((entry) => {
+        const address = entry.wallet_address; // Use wallet_address as the key
+        combinedScores[address] = (combinedScores[address] || 0) + entry.total_score;
+      });
+
+      // Convert to leaderboard format and sort
+      const rankedData = Object.entries(combinedScores)
+        .map(([address, points], index) => ({
+          rank: index + 1,
+          address,
+          points,
+        }))
+        .sort((a, b) => b.points - a.points)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+      console.log("Combined Leaderboard Data:", rankedData);
       setLeaderboard(rankedData);
 
       if (walletAddress) {
@@ -106,124 +136,73 @@ export default function Leaderboard() {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  const getBtcProvider = async () => {
-    if (window.magicEden?.bitcoin) return window.magicEden.bitcoin;
-    throw new Error("Magic Eden wallet not detected");
-  };
-
-  const connectWallet = async (provider: "magicEden" | "xverse" | "unisat") => {
+  const connectWallet = useCallback(async (provider: "magicEden" | "xverse" | "unisat") => {
     setIsWalletModalOpen(false);
     try {
       let address: string | null = null;
 
-      console.log(`Attempting to connect ${provider} wallet...`);
-
       if (provider === "magicEden") {
         if (window.magicEden?.bitcoin) {
           await getAddress({
-            getProvider: getBtcProvider,
+            getProvider: async () => window.magicEden!.bitcoin,
             payload: {
-              purposes: [AddressPurpose.Ordinals, AddressPurpose.Payment],
-              message: "Address for Froggy Folios leaderboard",
+              purposes: [AddressPurpose.Ordinals],
+              message: "Login to Froggy Folios",
               network: { type: BitcoinNetworkType.Mainnet },
             },
             onFinish: (response) => {
-              const taprootAddress = response.addresses.find(
-                (addr: WalletAddress) => addr.purpose === AddressPurpose.Ordinals && addr.address.startsWith("bc1p")
-              );
-              address = taprootAddress?.address || null;
+              const found = response.addresses.find(a => a.purpose === AddressPurpose.Ordinals && a.address.startsWith("bc1p"));
+              address = found?.address || null;
             },
-            onCancel: () => {
-              throw new Error("Request canceled by user");
-            },
+            onCancel: () => { throw new Error("Request canceled"); },
           });
-          if (!address) throw new Error("No Taproot address (bc1p...) found");
         } else {
-          console.log("Magic Eden wallet not detected.");
-          alert("Magic Eden wallet not detected. Please install it.");
-          window.open("https://wallet.magiceden.io/", "_blank");
+          alert("Magic Eden wallet not detected");
+          window.open("https://wallet.magiceden.io", "_blank");
           return;
         }
       } else if (provider === "xverse") {
-        const xverse = (window as any).XverseProviders as {
-          BitcoinProvider?: {
-            request: (method: string, params: any) => Promise<{ result: any; error?: { message: string } }>;
-          };
-        } | undefined;
-
+        const xverse = window.XverseProviders;
         if (xverse?.BitcoinProvider) {
-          console.log("Xverse BitcoinProvider detected, requesting wallet_connect...");
-          const connectResponse = await xverse.BitcoinProvider.request("wallet_connect", null);
-          console.log("Xverse connect response:", connectResponse);
-          if (!connectResponse.result) throw new Error(connectResponse.error?.message || "Xverse connection failed");
-
-          const params = {
-            purposes: ["payment", "ordinals"],
-            message: "Provide addresses for Froggy Folios leaderboard",
+          await xverse.BitcoinProvider.request("wallet_connect", null);
+          const res = await xverse.BitcoinProvider.request("getAddresses", {
+            purposes: ["ordinals"],
+            message: "Login to Froggy Folios",
             network: { type: "Mainnet" },
-          };
-          console.log("Requesting Xverse addresses with params:", params);
-          const addressResponse = await xverse.BitcoinProvider.request("getAddresses", params);
-          console.log("Xverse address response:", addressResponse);
-          if (!addressResponse.result || !Array.isArray(addressResponse.result.addresses)) {
-            throw new Error(addressResponse.error?.message || "Failed to fetch Xverse addresses");
-          }
-
-          const taprootAddressItem = addressResponse.result.addresses.find(
-            (addr: XverseAddress) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
-          );
-          address = taprootAddressItem?.address || null;
-          if (!address) throw new Error("No Taproot address (bc1p...) found");
+          });
+          const found = res.result.addresses.find((a: any) => a.purpose === "ordinals" && a.address.startsWith("bc1p"));
+          address = found?.address || null;
         } else {
-          console.log("Xverse wallet not detected.");
-          alert("Xverse wallet not detected. Please install it.");
-          window.open("https://www.xverse.app/", "_blank");
+          alert("Xverse wallet not detected");
+          window.open("https://www.xverse.app", "_blank");
           return;
         }
       } else if (provider === "unisat") {
         if (window.unisat) {
-          console.log("UniSat wallet detected, requesting accounts...");
-          try {
-            const accounts = await window.unisat.requestAccounts();
-            console.log("UniSat accounts:", accounts);
-            address = accounts.find((addr: string) => addr.startsWith("bc1p")) || null;
-            if (!address) {
-              const currentAccounts = await window.unisat.getAccounts();
-              console.log("UniSat current accounts:", currentAccounts);
-              address = currentAccounts.find((addr: string) => addr.startsWith("bc1p")) || null;
-            }
-          } catch (e) {
-            console.error("UniSat connect failed:", e);
-            throw new Error("Failed to connect UniSat wallet");
-          }
+          const accounts = await window.unisat.requestAccounts();
+          address = accounts.find(a => a.startsWith("bc1p")) || null;
         } else {
-          console.log("UniSat wallet not detected.");
-          alert("UniSat wallet not detected. Please install it.");
-          window.open("https://unisat.io/", "_blank");
+          alert("UniSat wallet not detected");
+          window.open("https://unisat.io", "_blank");
           return;
         }
       }
 
       if (!address) {
-        alert("No Taproot address (bc1p...) found. Please ensure your wallet is set to Taproot.");
+        alert("No Taproot address found");
         return;
       }
-
       setWalletAddress(address);
-      console.log(`Wallet connected with address: ${address}`);
-    } catch (error) {
-      console.error(`${provider} connection error:`, error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      alert(`Failed to connect ${provider} wallet: ${errorMessage}`);
-      setWalletAddress(null);
+    } catch (err) {
+      console.error("Wallet connect error:", err);
+      alert("Failed to connect wallet");
     }
-  };
+  }, []);
 
   const disconnectWallet = () => {
     setWalletAddress(null);
     setUserPoints(0);
     setUserRank(null);
-    console.log("Wallet disconnected");
   };
 
   const getRankDisplay = (rank: number) => {
@@ -244,7 +223,10 @@ export default function Leaderboard() {
   return (
     <div className={`${gameStyles.container} ${theme === "dark" ? gameStyles.dark : gameStyles.light}`}>
       <div className={gameStyles.themeToggle}>
-        <button onClick={toggleTheme} className={`${gameStyles.themeButton} ${theme === "dark" ? gameStyles.themeButtonDark : gameStyles.themeButtonLight}`}>
+        <button 
+          onClick={toggleTheme} 
+          className={`${gameStyles.themeButton} ${theme === "dark" ? gameStyles.themeButtonDark : gameStyles.themeButtonLight}`}
+        >
           {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
         </button>
       </div>
@@ -255,7 +237,10 @@ export default function Leaderboard() {
             <span className={styles.userAddress}>
               {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
             </span>
-            <button onClick={disconnectWallet} className={`${gameStyles.disconnectButton} ${theme === "dark" ? gameStyles.disconnectButtonDark : gameStyles.disconnectButtonLight}`}>
+            <button 
+              onClick={disconnectWallet} 
+              className={`${gameStyles.disconnectButton} ${theme === "dark" ? gameStyles.disconnectButtonDark : gameStyles.disconnectButtonLight}`}
+            >
               Disconnect
             </button>
           </div>
@@ -268,7 +253,10 @@ export default function Leaderboard() {
         </div>
       ) : (
         <div className={styles.connectContainer}>
-          <button onClick={() => setIsWalletModalOpen(true)} className={`${gameStyles.connectWalletButton} ${theme === "dark" ? gameStyles.connectWalletButtonDark : gameStyles.connectWalletButtonLight}`}>
+          <button 
+            onClick={() => setIsWalletModalOpen(true)} 
+            className={`${gameStyles.connectWalletButton} ${theme === "dark" ? gameStyles.connectWalletButtonDark : gameStyles.connectWalletButtonLight}`}
+          >
             Connect Wallet
           </button>
         </div>
@@ -339,17 +327,29 @@ export default function Leaderboard() {
       >
         <h2 className={gameStyles.modalTitle}>Choose Your Wallet</h2>
         <div className={gameStyles.walletOptions}>
-          <button onClick={() => connectWallet("magicEden")} className={`${gameStyles.walletButton} ${theme === "dark" ? gameStyles.walletButtonDark : gameStyles.walletButtonLight}`}>
+          <button 
+            onClick={() => connectWallet("magicEden")} 
+            className={`${gameStyles.walletButton} ${theme === "dark" ? gameStyles.walletButtonDark : gameStyles.walletButtonLight}`}
+          >
             Magic Eden
           </button>
-          <button onClick={() => connectWallet("xverse")} className={`${gameStyles.walletButton} ${theme === "dark" ? gameStyles.walletButtonDark : gameStyles.walletButtonLight}`}>
+          <button 
+            onClick={() => connectWallet("xverse")} 
+            className={`${gameStyles.walletButton} ${theme === "dark" ? gameStyles.walletButtonDark : gameStyles.walletButtonLight}`}
+          >
             Xverse
           </button>
-          <button onClick={() => connectWallet("unisat")} className={`${gameStyles.walletButton} ${theme === "dark" ? gameStyles.walletButtonDark : gameStyles.walletButtonLight}`}>
+          <button 
+            onClick={() => connectWallet("unisat")} 
+            className={`${gameStyles.walletButton} ${theme === "dark" ? gameStyles.walletButtonDark : gameStyles.walletButtonLight}`}
+          >
             UniSat
           </button>
         </div>
-        <button onClick={() => setIsWalletModalOpen(false)} className={`${gameStyles.closeButton} ${theme === "dark" ? gameStyles.closeButtonDark : gameStyles.closeButtonLight}`}>
+        <button 
+          onClick={() => setIsWalletModalOpen(false)} 
+          className={`${gameStyles.closeButton} ${theme === "dark" ? gameStyles.closeButtonDark : gameStyles.closeButtonLight}`}
+        >
           Cancel
         </button>
       </Modal>
