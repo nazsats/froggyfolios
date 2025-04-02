@@ -13,21 +13,6 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhaXloYXJ3Y2FpdW12cXF4cG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyOTg3MDIsImV4cCI6MjA1NTg3NDcwMn0.pccfqBA7pjPBt3HBgcTV9YoLs48R2lbNk1tRvdd5WsQ"
 );
 
-declare global {
-  interface Window {
-    magicEden?: { bitcoin: any };
-    unisat?: {
-      requestAccounts: () => Promise<string[]>;
-      getAccounts: () => Promise<string[]>;
-      [key: string]: any;
-    };
-    XverseProviders?: {
-      BitcoinProvider?: {
-        request: (method: string, params: any) => Promise<any>;
-      };
-    };
-  }
-}
 
 type GameObject = {
   id: number;
