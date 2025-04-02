@@ -104,12 +104,13 @@ export default function Game2() {
 
   const savePlayerData = useCallback(
     async (newScore: number, newCooldownEnd?: Date | null, resetPlayCount: boolean = false) => {
-      if (!walletAddress) return;
+      if (!walletAddress) return 0;
 
       const now = new Date();
+      const newPlayCount = resetPlayCount ? 0 : playCount + 1;
       const updatedData = {
         wallet_address: walletAddress,
-        play_count: resetPlayCount ? 0 : playCount + 1,
+        play_count: newPlayCount,
         last_played_at: now.toISOString(),
         total_score: totalScore + newScore,
         last_game_score: newScore,
@@ -125,12 +126,13 @@ export default function Game2() {
       if (error) {
         console.error("Error saving player data:", error);
       } else {
-        setPlayCount(resetPlayCount ? 0 : playCount + 1);
+        setPlayCount(newPlayCount);
         setLastPlayedAt(now);
         setTotalScore(prev => prev + newScore);
         setLastGameScore(newScore);
         if (newCooldownEnd !== undefined) setCooldownEnd(newCooldownEnd);
       }
+      return newPlayCount; // Return the new playCount for synchronization
     },
     [walletAddress, playCount, totalScore, cooldownEnd, tweetWindowEnd]
   );
@@ -264,12 +266,14 @@ export default function Game2() {
     if (timeLeft <= 0) {
       setIsGameOver(true);
       const oneHourLater = playCount >= 5 ? new Date(Date.now() + 60 * 60 * 1000) : undefined;
-      savePlayerData(score, oneHourLater, playCount > 5);
-      if (playCount === 4) {
-        const fiveMinutesLater = new Date(Date.now() + 5 * 60 * 1000);
-        setTweetWindowEnd(fiveMinutesLater);
-        setIsTweetModalOpen(true);
-      }
+      savePlayerData(score, oneHourLater, playCount > 5).then((newPlayCount) => {
+        console.log("Updated playCount after save:", newPlayCount); // Debug log
+        if (playCount === 4) {
+          const fiveMinutesLater = new Date(Date.now() + 5 * 60 * 1000);
+          setTweetWindowEnd(fiveMinutesLater);
+          setIsTweetModalOpen(true);
+        }
+      });
       return;
     }
     const interval = setInterval(() => {
@@ -328,6 +332,7 @@ export default function Game2() {
   };
 
   const resetGame = () => {
+    console.log("playCount before reset:", playCount); // Debug log
     setGameStarted(false);
     setTimeLeft(getAllowedTime());
     setScore(0);
@@ -338,6 +343,7 @@ export default function Game2() {
       setTweetCooldown(null);
       setTweetWindowEnd(null);
     }
+    setGameStarted(true); // Start the game immediately after reset
   };
 
   const startGame = () => {
