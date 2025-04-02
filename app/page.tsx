@@ -237,50 +237,42 @@ export default function Home() {
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex flex-col md:flex-row flex-grow px-4 py-4 md:py-6 space-y-4 md:space-y-0 md:space-x-12">
+      <div className="flex flex-col md:flex-row flex-grow px-4 py-4 md:py-6 space-y-4 md:space-y-0 md:space-x-16">
         {/* Mobile: Games First, Leaderboard Second */}
         <div className="w-full md:w-2/3 flex flex-col space-y-4 order-1 md:order-2">
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8">
             {/* Game 1: Froggy Food Chain */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={`flex-1 p-6 rounded-lg shadow-lg text-center relative overflow-hidden ${
-                theme === "dark" ? "bg-gray-800/90" : "bg-white/90"
-              } border-2 border-purple-500/50 hover:border-purple-400 transition-colors`}
+              className={`flex-1 flex flex-col rounded-lg shadow-lg overflow-hidden border-4 border-purple-500/50 hover:border-purple-400 transition-colors aspect-square relative z-0`} // z-0 to ensure no overlap
             >
-              {/* Neon Border Effect */}
-              <div className="absolute inset-0 border-4 border-transparent rounded-lg pointer-events-none animate-neon-glow">
-                <div className="absolute inset-0 border-4 border-purple-500/30 rounded-lg blur-sm" />
+              {/* Background Image */}
+              <div className="relative w-full h-full">
+                <Image
+                  src="/Game1.png"
+                  alt="Froggy Food Chain"
+                  layout="fill"
+                  objectFit="cover"
+                  objectPosition="top" // Prioritize top of the image
+                  className="rounded-t-lg"
+                />
+                {/* Overlay for Darkening Effect */}
+                <div className="absolute inset-0 bg-black/30 pointer-events-none rounded-t-lg" />
               </div>
-              {/* Background Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 pointer-events-none" />
-              {/* Floating Particles */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute w-2 h-2 bg-purple-400 rounded-full top-10 left-10 animate-float" />
-                <div className="absolute w-3 h-3 bg-pink-400 rounded-full bottom-10 right-10 animate-float-delayed" />
+              {/* Play Now Button */}
+              <div className="p-4 bg-gray-800/90">
+                <Link href="/game">
+                  <motion.button
+                    className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold text-base md:text-lg rounded-lg shadow-lg border-2 border-green-400/50 hover:border-green-300/50 transition-all duration-300 animate-pulse-glow"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Play Now
+                  </motion.button>
+                </Link>
               </div>
-              <Image
-                src="/emojis/stareye.png"
-                alt="Froggy Food Chain"
-                width={150}
-                height={150}
-                className="mx-auto mb-4"
-              />
-              <h3 className="text-xl md:text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                Froggy Food Chain
-              </h3>
-              <Link href="/game">
-                <motion.button
-                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full text-base md:text-lg font-semibold shadow-lg relative overflow-hidden"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="relative z-10">Play Now</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 hover:opacity-30 transition-opacity" />
-                </motion.button>
-              </Link>
             </motion.div>
 
             {/* Game 2: Froggy Shelf */}
@@ -288,41 +280,33 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className={`flex-1 p-6 rounded-lg shadow-lg text-center relative overflow-hidden ${
-                theme === "dark" ? "bg-gray-800/90" : "bg-white/90"
-              } border-2 border-purple-500/50 hover:border-purple-400 transition-colors`}
+              className={`flex-1 flex flex-col rounded-lg shadow-lg overflow-hidden border-4 border-purple-500/50 hover:border-purple-400 transition-colors aspect-square relative z-0`} // z-0 to ensure no overlap
             >
-              {/* Neon Border Effect */}
-              <div className="absolute inset-0 border-4 border-transparent rounded-lg pointer-events-none animate-neon-glow">
-                <div className="absolute inset-0 border-4 border-purple-500/30 rounded-lg blur-sm" />
+              {/* Background Image */}
+              <div className="relative w-full h-full">
+                <Image
+                  src="/Game2.png"
+                  alt="Froggy Shelf"
+                  layout="fill"
+                  objectFit="cover"
+                  objectPosition="top" // Prioritize top of the image
+                  className="rounded-t-lg"
+                />
+                {/* Overlay for Darkening Effect */}
+                <div className="absolute inset-0 bg-black/30 pointer-events-none rounded-t-lg" />
               </div>
-              {/* Background Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 pointer-events-none" />
-              {/* Floating Particles */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute w-2 h-2 bg-purple-400 rounded-full top-10 left-10 animate-float" />
-                <div className="absolute w-3 h-3 bg-pink-400 rounded-full bottom-10 right-10 animate-float-delayed" />
+              {/* Play Now Button */}
+              <div className="p-4 bg-gray-800/90">
+                <Link href="/game2">
+                  <motion.button
+                    className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold text-base md:text-lg rounded-lg shadow-lg border-2 border-green-400/50 hover:border-green-300/50 transition-all duration-300 animate-pulse-glow"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Play Now
+                  </motion.button>
+                </Link>
               </div>
-              <Image
-                src="/emojis/stareye.png"
-                alt="Froggy Shelf"
-                width={150}
-                height={150}
-                className="mx-auto mb-4"
-              />
-              <h3 className="text-xl md:text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                Froggy Shelf
-              </h3>
-              <Link href="/game2">
-                <motion.button
-                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full text-base md:text-lg font-semibold shadow-lg relative overflow-hidden"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="relative z-10">Play Now</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 hover:opacity-30 transition-opacity" />
-                </motion.button>
-              </Link>
             </motion.div>
           </div>
 
@@ -333,7 +317,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className={`p-6 rounded-lg shadow-lg ${
               theme === "dark" ? "bg-gray-800/90" : "bg-white/90"
-            } border border-purple-500/50`}
+            } border border-purple-500/50 relative z-0`} // z-0 to ensure no overlap
           >
             <h3 className="text-lg md:text-xl font-semibold mb-4 flex items-center">
               <span className="mr-2">🌐</span> Online Now
@@ -363,7 +347,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className={`p-6 rounded-lg shadow-lg ${
               theme === "dark" ? "bg-gray-800/90" : "bg-white/90"
-            } border border-purple-500/50`}
+            } border border-purple-500/50 relative z-0`} // z-0 to ensure no overlap
           >
             <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center">
               <span className="mr-2">🏆</span> Leaderboard
