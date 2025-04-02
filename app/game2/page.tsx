@@ -269,16 +269,6 @@ export default function Game2() {
         const fiveMinutesLater = new Date(Date.now() + 5 * 60 * 1000);
         setTweetWindowEnd(fiveMinutesLater);
         setIsTweetModalOpen(true);
-      } else if (playCount < 5) {
-        // Auto-start next life
-        setTimeout(() => {
-          setGameStarted(false);
-          setIsGameOver(false);
-          setScore(0);
-          setGameObjects([]);
-          setTimeLeft(getAllowedTime());
-          setGameStarted(true);
-        }, 1000); // Small delay to show "Shelf Closed" modal briefly
       }
       return;
     }
@@ -560,12 +550,14 @@ export default function Game2() {
         <h2 className={styles.modalTitle}>Shelf Closed!</h2>
         <p className={styles.modalText}>Your Shelf Points: {score}</p>
         <p className={styles.modalText}>Total Folio Points: {totalScore}</p>
-        <button 
-          onClick={resetGame} 
-          className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
-        >
-          Sort Again
-        </button>
+        {playCount < 5 && (
+          <button 
+            onClick={resetGame} 
+            className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
+          >
+            Sort Again
+          </button>
+        )}
       </Modal>
 
       <Modal
@@ -652,7 +644,7 @@ export default function Game2() {
               listStyleType: "none", 
               padding: "0", 
               textAlign: "left", 
-              fontSize: "1rm", 
+              fontSize: "1rem", 
               color: theme === "dark" ? "#d1d5db" : "#6b7280",
             }}
           >
