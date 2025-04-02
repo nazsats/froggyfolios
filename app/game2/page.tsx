@@ -42,6 +42,8 @@ export default function Game2() {
   const [tweetCooldown, setTweetCooldown] = useState<number | null>(null);
   const [tweetWindowEnd, setTweetWindowEnd] = useState<Date | null>(null);
   const [cooldownSecondsLeft, setCooldownSecondsLeft] = useState<number>(0);
+  const [hasTweeted, setHasTweeted] = useState<boolean>(false); // Track if tweet was used
+  const [hasEnded, setHasEnded] = useState<boolean>(false); // Track if game has ended to prevent re-trigger
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
@@ -63,6 +65,7 @@ export default function Game2() {
       if (secondsLeft === 0) {
         setPlayCount(0);
         setCooldownEnd(null);
+        setHasTweeted(false); // Reset tweet status after cooldown
         savePlayerData(0, null, true); // Reset after cooldown
       }
     };
@@ -98,6 +101,7 @@ export default function Game2() {
       setLastGameScore(0);
       setCooldownEnd(null);
       setTweetWindowEnd(null);
+      setHasTweeted(false);
       await savePlayerData(0);
     }
   };
@@ -138,8 +142,8 @@ export default function Game2() {
   );
 
   const getAllowedTime = (): number => {
-    if (playCount === 5 && tweetCooldown === 0) return 30; // Bonus life
-    if (playCount >= 5) return 0; // No time until tweet or cooldown expires
+    if (playCount === 5 && tweetCooldown === 0 && hasTweeted) return 30; // Bonus life after tweet
+    if (playCount >= 5) return 0; // No time until cooldown expires
     switch (playCount) {
       case 0: return 60;
       case 1: return 40;
@@ -157,7 +161,7 @@ export default function Game2() {
   };
 
   const canTweet = () => {
-    if (!tweetWindowEnd) return false;
+    if (!tweetWindowEnd || hasTweeted) return false;
     const now = new Date();
     return now < tweetWindowEnd;
   };
@@ -177,6 +181,7 @@ export default function Game2() {
     window.open(tweetUrl, "_blank", "width=600,height=400");
 
     setTweetCooldown(10);
+    setHasTweeted(true); // Mark that the tweet has been used
     const countdown = setInterval(() => {
       setTweetCooldown((prev) => {
         if (prev === null || prev <= 1) {
@@ -184,9 +189,10 @@ export default function Game2() {
           setTweetCooldown(0); // Bonus life ready
           setTimeLeft(30);
           setIsTweetModalOpen(false);
-          setGameStarted(false); // Reset game state for bonus life
+          setGameStarted(false); // Reset state, but don’t start yet
           setIsGameOver(false);
           setGameObjects([]);
+          setHasEnded(false); // Reset for bonus life
           return 0;
         }
         return prev - 1;
@@ -262,9 +268,10 @@ export default function Game2() {
   }, []);
 
   useEffect(() => {
-    if (!gameStarted || isGameOver) return;
+    if (!gameStarted || isGameOver || hasEnded) return;
     if (timeLeft <= 0) {
       setIsGameOver(true);
+      setHasEnded(true); // Mark game as ended to prevent re-trigger
       const oneHourLater = playCount >= 5 ? new Date(Date.now() + 60 * 60 * 1000) : undefined;
       savePlayerData(score, oneHourLater, playCount > 5).then((newPlayCount) => {
         console.log("Updated playCount after save:", newPlayCount); // Debug log
@@ -272,6 +279,12 @@ export default function Game2() {
           const fiveMinutesLater = new Date(Date.now() + 5 * 60 * 1000);
           setTweetWindowEnd(fiveMinutesLater);
           setIsTweetModalOpen(true);
+        } else if (playCount === 5 && hasTweeted) {
+          setCooldownEnd(new Date(Date.now() + 60 * 60 * 1000));
+          savePlayerData(0, new Date(Date.now() + 60 * 60 * 1000));
+        } else if (playCount === 5 && !hasTweeted) {
+          setCooldownEnd(new Date(Date.now() + 60 * 60 * 1000));
+          savePlayerData(0, new Date(Date.now() + 60 * 60 * 1000));
         }
       });
       return;
@@ -280,7 +293,7 @@ export default function Game2() {
       setTimeLeft((t) => t - 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [gameStarted, isGameOver, timeLeft, score, playCount, savePlayerData]);
+  }, [gameStarted, isGameOver, timeLeft, score, playCount, savePlayerData, hasTweeted, hasEnded]);
 
   useEffect(() => {
     if (gameStarted && !isGameOver && gameRef.current) {
@@ -338,23 +351,30 @@ export default function Game2() {
     setScore(0);
     setIsGameOver(false);
     setGameObjects([]);
+    setHasEnded(false); // Reset for next game
     if (playCount > 5) {
       setPlayCount(0);
       setTweetCooldown(null);
       setTweetWindowEnd(null);
+      setHasTweeted(false);
     }
-    setGameStarted(true); // Start the game immediately after reset
   };
 
   const startGame = () => {
     if (!canPlay() && playCount >= 5 && tweetCooldown !== 0) return;
     const allowedTime = getAllowedTime();
-    if (allowedTime === 0 && playCount < 5) return;
+    if (allowedTime === 0) return;
     setScore(0);
     setTimeLeft(allowedTime);
     setIsGameOver(false);
     setGameObjects([]);
     setGameStarted(true);
+    setHasEnded(false); // Reset for new game start
+  };
+
+  const handleSortAgain = () => {
+    resetGame();
+    startGame();
   };
 
   return (
@@ -397,7 +417,7 @@ export default function Game2() {
 
           <div style={{ width: "100%", maxWidth: "300px", margin: "10px auto" }}>
             <p style={{ textAlign: "center", marginBottom: "5px" }}>
-              Shelves Organized: {Math.min(playCount, 5)}/{playCount === 5 && tweetCooldown === 0 ? 6 : 5}
+              Shelves Organized: {Math.min(playCount, 5)}/{playCount === 5 && tweetCooldown === 0 && hasTweeted ? 6 : 5}
             </p>
             <div style={{
               width: "100%",
@@ -407,7 +427,7 @@ export default function Game2() {
               overflow: "hidden"
             }}>
               <div style={{
-                width: `${(Math.min(playCount, 5) / (playCount === 5 && tweetCooldown === 0 ? 6 : 5)) * 100}%`,
+                width: `${(Math.min(playCount, 5) / (playCount === 5 && tweetCooldown === 0 && hasTweeted ? 6 : 5)) * 100}%`,
                 height: "100%",
                 background: "#00ff99",
                 transition: "width 0.3s ease"
@@ -422,7 +442,7 @@ export default function Game2() {
           )}
 
           <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            {!gameStarted && !isGameOver && (canPlay() || (playCount === 5 && tweetCooldown === 0)) && (
+            {!gameStarted && !isGameOver && (canPlay() || (playCount === 5 && tweetCooldown === 0 && hasTweeted)) && (
               <motion.button
                 onClick={startGame}
                 className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
@@ -438,6 +458,15 @@ export default function Game2() {
             >
               📚 Library Rules
             </motion.button>
+            {!gameStarted && !isGameOver && playCount < 5 && (
+              <motion.button
+                onClick={handleSortAgain}
+                className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
+                whileHover={{ scale: 1.1 }}
+              >
+                🔄 Sort Again
+              </motion.button>
+            )}
           </div>
         </div>
       )}
@@ -549,7 +578,7 @@ export default function Game2() {
 
       <Modal
         isOpen={isGameOver}
-        onRequestClose={resetGame}
+        onRequestClose={() => setIsGameOver(false)} // Only close modal, don’t reset
         className={`${styles.modal} ${theme === "dark" ? styles.modalDark : styles.modalLight}`}
         overlayClassName={styles.modalOverlay}
       >
@@ -557,12 +586,23 @@ export default function Game2() {
         <p className={styles.modalText}>Your Shelf Points: {score}</p>
         <p className={styles.modalText}>Total Folio Points: {totalScore}</p>
         {playCount < 5 && (
-          <button 
-            onClick={resetGame} 
-            className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
-          >
-            Sort Again
-          </button>
+          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+            <button 
+              onClick={handleSortAgain} 
+              className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
+            >
+              Sort Again
+            </button>
+            <button 
+              onClick={() => setIsGameOver(false)} 
+              className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
+            >
+              Close
+            </button>
+          </div>
+        )}
+        {playCount === 5 && hasTweeted && (
+          <p className={styles.modalText}>Bonus Life Complete! Cooldown starting...</p>
         )}
       </Modal>
 
