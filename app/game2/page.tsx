@@ -13,7 +13,6 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhaXloYXJ3Y2FpdW12cXF4cG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyOTg3MDIsImV4cCI6MjA1NTg3NDcwMn0.pccfqBA7pjPBt3HBgcTV9YoLs48R2lbNk1tRvdd5WsQ"
 );
 
-
 type GameObject = {
   id: number;
   type: "egg" | "frog" | "goldenfrog" | "insect" | "leaf" | "snake";
@@ -103,35 +102,38 @@ export default function Game2() {
     }
   };
 
-  const savePlayerData = async (newScore: number, newCooldownEnd?: Date | null, resetPlayCount: boolean = false) => {
-    if (!walletAddress) return;
+  const savePlayerData = useCallback(
+    async (newScore: number, newCooldownEnd?: Date | null, resetPlayCount: boolean = false) => {
+      if (!walletAddress) return;
 
-    const now = new Date();
-    const updatedData = {
-      wallet_address: walletAddress,
-      play_count: resetPlayCount ? 0 : playCount + 1,
-      last_played_at: now.toISOString(),
-      total_score: totalScore + newScore,
-      last_game_score: newScore,
-      updated_at: now.toISOString(),
-      cooldown_end: newCooldownEnd ? newCooldownEnd.toISOString() : cooldownEnd ? cooldownEnd.toISOString() : null,
-      tweet_window_end: tweetWindowEnd ? tweetWindowEnd.toISOString() : null,
-    };
+      const now = new Date();
+      const updatedData = {
+        wallet_address: walletAddress,
+        play_count: resetPlayCount ? 0 : playCount + 1,
+        last_played_at: now.toISOString(),
+        total_score: totalScore + newScore,
+        last_game_score: newScore,
+        updated_at: now.toISOString(),
+        cooldown_end: newCooldownEnd ? newCooldownEnd.toISOString() : cooldownEnd ? cooldownEnd.toISOString() : null,
+        tweet_window_end: tweetWindowEnd ? tweetWindowEnd.toISOString() : null,
+      };
 
-    const { error } = await supabase
-      .from("player_scores")
-      .upsert(updatedData, { onConflict: "wallet_address" });
+      const { error } = await supabase
+        .from("player_scores")
+        .upsert(updatedData, { onConflict: "wallet_address" });
 
-    if (error) {
-      console.error("Error saving player data:", error);
-    } else {
-      setPlayCount(resetPlayCount ? 0 : playCount + 1);
-      setLastPlayedAt(now);
-      setTotalScore(prev => prev + newScore);
-      setLastGameScore(newScore);
-      if (newCooldownEnd !== undefined) setCooldownEnd(newCooldownEnd);
-    }
-  };
+      if (error) {
+        console.error("Error saving player data:", error);
+      } else {
+        setPlayCount(resetPlayCount ? 0 : playCount + 1);
+        setLastPlayedAt(now);
+        setTotalScore(prev => prev + newScore);
+        setLastGameScore(newScore);
+        if (newCooldownEnd !== undefined) setCooldownEnd(newCooldownEnd);
+      }
+    },
+    [walletAddress, playCount, totalScore, cooldownEnd, tweetWindowEnd]
+  );
 
   const getAllowedTime = (): number => {
     if (playCount === 5 && tweetCooldown === 0) return 30; // Bonus life
@@ -180,6 +182,9 @@ export default function Game2() {
           setTweetCooldown(0); // Bonus life ready
           setTimeLeft(30);
           setIsTweetModalOpen(false);
+          setGameStarted(false); // Reset game state for bonus life
+          setIsGameOver(false);
+          setGameObjects([]);
           return 0;
         }
         return prev - 1;
@@ -259,19 +264,29 @@ export default function Game2() {
     if (timeLeft <= 0) {
       setIsGameOver(true);
       const oneHourLater = playCount >= 5 ? new Date(Date.now() + 60 * 60 * 1000) : undefined;
+      savePlayerData(score, oneHourLater, playCount > 5);
       if (playCount === 4) {
         const fiveMinutesLater = new Date(Date.now() + 5 * 60 * 1000);
         setTweetWindowEnd(fiveMinutesLater);
         setIsTweetModalOpen(true);
+      } else if (playCount < 5) {
+        // Auto-start next life
+        setTimeout(() => {
+          setGameStarted(false);
+          setIsGameOver(false);
+          setScore(0);
+          setGameObjects([]);
+          setTimeLeft(getAllowedTime());
+          setGameStarted(true);
+        }, 1000); // Small delay to show "Shelf Closed" modal briefly
       }
-      savePlayerData(score, oneHourLater, playCount > 5);
       return;
     }
     const interval = setInterval(() => {
       setTimeLeft((t) => t - 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [gameStarted, isGameOver, timeLeft, score, playCount]);
+  }, [gameStarted, isGameOver, timeLeft, score, playCount, savePlayerData]);
 
   useEffect(() => {
     if (gameStarted && !isGameOver && gameRef.current) {
@@ -637,7 +652,7 @@ export default function Game2() {
               listStyleType: "none", 
               padding: "0", 
               textAlign: "left", 
-              fontSize: "1rem", 
+              fontSize: "1rm", 
               color: theme === "dark" ? "#d1d5db" : "#6b7280",
             }}
           >
