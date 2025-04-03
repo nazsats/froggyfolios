@@ -8,11 +8,11 @@ import Image from "next/image";
 interface Submission {
   id: number;
   twitter_id: string;
-  twitterusername: string; // Changed from optional to required since it's in Supabase data
+  twitterusername: string;
   wallet: string;
   message: string;
   status: string;
-  twitterUsername: string; // Keep this for compatibility with your UI
+  twitterUsername: string;
 }
 
 export default function AdminPanel() {
@@ -45,10 +45,9 @@ export default function AdminPanel() {
 
     console.log("Fetched tasks from Supabase:", tasksData);
 
-    // Map Supabase data directly, using twitterusername from the database
     const submissionsWithUsernames: Submission[] = tasksData.map((task: any) => ({
       ...task,
-      twitterUsername: task.twitterusername, // Use the existing twitterusername field
+      twitterUsername: task.twitterusername,
     }));
 
     setSubmissions(submissionsWithUsernames);
@@ -103,16 +102,16 @@ export default function AdminPanel() {
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
-      .ilike("twitter_id", `%${searchQuery}%`)
+      .ilike("twitterusername", `%${searchQuery}%`) // Changed to search by twitterusername
       .single();
 
     if (!error && data) {
       setSelectedSubmission({
         ...data,
-        twitterUsername: data.twitterusername, // Use twitterusername from Supabase
+        twitterUsername: data.twitterusername,
       });
     } else {
-      alert("No user found with that Twitter ID.");
+      alert("No user found with that Twitter username.");
     }
     setLoading(false);
   };
@@ -221,7 +220,7 @@ export default function AdminPanel() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Enter Twitter ID or username"
+              placeholder="Enter Twitter username" // Updated placeholder
               className="p-3 bg-gray-800 text-white placeholder-gray-400 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-700 transition-all duration-300"
             />
             <button
