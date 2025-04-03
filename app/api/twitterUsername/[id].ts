@@ -1,4 +1,4 @@
-// /pages/api/twitterUsername/[id].ts
+// app/api/twitterUsername/[id].ts (or pages/api/twitterUsername/[id].ts)
 import { NextApiRequest, NextApiResponse } from "next";
 
 interface TwitterUserResponse {
@@ -16,16 +16,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { id } = req.query as { id: string };
   const token = process.env.TWITTER_BEARER_TOKEN;
 
-  const response = await fetch(`https://api.twitter.com/2/users/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  
-  console.log("Rate Limit Remaining:", response.headers.get("x-rate-limit-remaining"));
-  console.log("Rate Limit Reset:", new Date(parseInt(response.headers.get("x-rate-limit-reset")!) * 1000));
-
-
   if (!token) {
     console.error("TWITTER_BEARER_TOKEN not set in environment");
     return res.status(500).json({ username: null, error: "Bearer token missing" });
@@ -37,10 +27,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Authorization: `Bearer ${token}`,
       },
     });
+
+    const rateLimitRemaining = response.headers.get("x-rate-limit-remaining");
+    const rateLimitReset = response.headers.get("x-rate-limit-reset");
+    console.log(`API Request for ID ${id} - Status: ${response.status}`);
+    console.log(`Rate Limit Remaining: ${rateLimitRemaining}`);
+    console.log(
+      `Rate Limit Reset: ${
+        rateLimitReset ? new Date(parseInt(rateLimitReset) * 1000) : "N/A"
+      }`
+    );
+
     const data: TwitterUserResponse = await response.json();
 
-    if (response.ok && data.data) {
-      console.log(`Successfully fetched username for ID ${id}:`, data.data.username);
+    if (response.ok && data.data?.username) {
+      console.log(`Fetched username for ID ${id}: ${data.data.username}`);
       return res.status(200).json({ username: `@${data.data.username}` });
     }
 
@@ -48,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error(`Twitter API error for ID ${id}:`, {
       status: response.status,
       statusText: response.statusText,
+      errorMessage,
       data,
     });
     return res.status(response.status).json({

@@ -8,11 +8,11 @@ import Image from "next/image";
 interface Submission {
   id: number;
   twitter_id: string;
-  twitterusername?: string;
+  twitterusername: string; // Changed from optional to required since it's in Supabase data
   wallet: string;
   message: string;
   status: string;
-  twitterUsername: string;
+  twitterUsername: string; // Keep this for compatibility with your UI
 }
 
 export default function AdminPanel() {
@@ -23,7 +23,7 @@ export default function AdminPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalEntries, setTotalEntries] = useState(0); // New state for total count
+  const [totalEntries, setTotalEntries] = useState(0);
   const [expandedMessages, setExpandedMessages] = useState<{ [key: number]: boolean }>({});
   const entriesPerPage = 20;
 
@@ -31,7 +31,7 @@ export default function AdminPanel() {
     setLoading(true);
     const { data: tasksData, error: tasksError, count } = await supabase
       .from("tasks")
-      .select("*", { count: "exact" }) // Fetch total count
+      .select("*", { count: "exact" })
       .order("id", { ascending: true })
       .range((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage - 1);
 
@@ -43,39 +43,22 @@ export default function AdminPanel() {
       return;
     }
 
-    const submissionsWithUsernames: Submission[] = await Promise.all(
-      tasksData.map(async (task: any) => {
-        const username = await fetchTwitterUsername(task.twitter_id);
-        return {
-          ...task,
-          twitterUsername: username || `ID_${task.twitter_id}`,
-        };
-      })
-    );
+    console.log("Fetched tasks from Supabase:", tasksData);
+
+    // Map Supabase data directly, using twitterusername from the database
+    const submissionsWithUsernames: Submission[] = tasksData.map((task: any) => ({
+      ...task,
+      twitterUsername: task.twitterusername, // Use the existing twitterusername field
+    }));
 
     setSubmissions(submissionsWithUsernames);
-    setTotalEntries(count || 0); // Set total count from the database
+    setTotalEntries(count || 0);
     setLoading(false);
   }, [currentPage]);
 
   useEffect(() => {
     if (authenticated) fetchSubmissions();
   }, [authenticated, currentPage, fetchSubmissions]);
-
-  const fetchTwitterUsername = async (twitterId: string): Promise<string | null> => {
-    try {
-      const response = await fetch(`/api/twitterUsername/${twitterId}`);
-      const data = await response.json();
-      if (response.ok && data.username) {
-        return data.username;
-      }
-      console.error(`Error fetching username for ID ${twitterId}:`, data.error);
-      return null;
-    } catch (error) {
-      console.error(`Fetch error for ID ${twitterId}:`, error);
-      return null;
-    }
-  };
 
   const updateStatus = async (id: number, newStatus: string) => {
     setLoading(true);
@@ -120,17 +103,16 @@ export default function AdminPanel() {
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
-      .ilike("twitterUsername", `%${searchQuery}%`) // Fixed column name case
+      .ilike("twitter_id", `%${searchQuery}%`)
       .single();
 
     if (!error && data) {
-      const username = await fetchTwitterUsername(data.twitter_id);
       setSelectedSubmission({
         ...data,
-        twitterUsername: username || `ID_${data.twitter_id}`,
+        twitterUsername: data.twitterusername, // Use twitterusername from Supabase
       });
     } else {
-      alert("No user found with that username.");
+      alert("No user found with that Twitter ID.");
     }
     setLoading(false);
   };
@@ -239,7 +221,7 @@ export default function AdminPanel() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Enter Twitter username"
+              placeholder="Enter Twitter ID or username"
               className="p-3 bg-gray-800 text-white placeholder-gray-400 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-700 transition-all duration-300"
             />
             <button
@@ -265,7 +247,7 @@ export default function AdminPanel() {
             <tbody>
               {paginatedSubmissions.map((submission) => (
                 <tr key={submission.id} className="bg-gray-700 hover:bg-gray-600 transition">
-                  <td className="border border-gray-600 p-4">{submission.twitterUsername || "N/A"}</td>
+                  <td className="border border-gray-600 p-4">{submission.twitterUsername}</td>
                   <td className="border border-gray-600 p-4 break-all">{submission.wallet}</td>
                   <td className="border border-gray-600 p-4">
                     {submission.message.length > 50 && !expandedMessages[submission.id] ? (
@@ -363,7 +345,7 @@ export default function AdminPanel() {
             </h3>
             <div className="w-full text-gray-800 space-y-4">
               <p>
-                <strong>Username:</strong> {selectedSubmission.twitterUsername || "N/A"}
+                <strong>Username:</strong> {selectedSubmission.twitterUsername}
               </p>
               <p>
                 <strong>Wallet:</strong> {selectedSubmission.wallet}
