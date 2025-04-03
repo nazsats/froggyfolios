@@ -10,7 +10,6 @@ declare global {
       getAccounts: () => Promise<string[]>;
       [key: string]: any;
     };
-    // Removed XverseProviders declaration to avoid conflict
   }
 }
 
@@ -20,6 +19,10 @@ import confetti from "canvas-confetti";
 import styles from "../../styles/Game.module.css";
 import { createClient } from "@supabase/supabase-js";
 import { getAddress, AddressPurpose, BitcoinNetworkType } from "sats-connect";
+import Image from "next/image"; // Next.js Image component
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 const supabase = createClient(
   "https://taiyharwcaiumvqqxpml.supabase.co",
@@ -60,9 +63,11 @@ export default function Game() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [userRank, setUserRank] = useState<number | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const pathname = usePathname(); // Get current route
 
   useEffect(() => {
-    console.log("useEffect triggered, walletAddress:", walletAddress);
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
     setTheme(savedTheme || "dark");
 
@@ -73,30 +78,31 @@ export default function Game() {
         const appElement = document.querySelector("#__next");
         if (appElement) {
           Modal.setAppElement(appElement as HTMLElement);
-          console.log("Modal.setAppElement succeeded");
         } else if (retries < maxRetries) {
-          console.warn("App element '#__next' not found yet, retrying...");
           retries++;
           setTimeout(setAppElement, 100);
-        } else {
-          console.error("Failed to set Modal app element after", maxRetries, "retries");
         }
       };
       setAppElement();
 
-      frogImgRef.current = new Image();
+      // Use window.Image explicitly to avoid conflict with Next.js Image
+      frogImgRef.current = new window.Image();
       frogImgRef.current.src = "/frog.png";
-      insectImgRef.current = new Image();
+      insectImgRef.current = new window.Image();
       insectImgRef.current.src = "/insect.png";
-      snakeImgRef.current = new Image();
+      snakeImgRef.current = new window.Image();
       snakeImgRef.current.src = "/snake.png";
     }
-  }, [walletAddress]);
+  }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   const fetchLeaderboardAndRank = useCallback(async (address: string) => {
@@ -132,7 +138,6 @@ export default function Game() {
       if (error && error.code !== "PGRST116") throw error;
       const fetchedPoints = data?.points || 0;
       setPoints(fetchedPoints);
-      console.log(`Points fetched for ${address}: ${fetchedPoints}`);
       fetchLeaderboardAndRank(address);
     } catch (error) {
       console.error("Error fetching points from Supabase:", error);
@@ -149,7 +154,6 @@ export default function Game() {
         .single();
       if (error) throw error;
       setPoints(data.points || 0);
-      console.log("Wallet saved to Supabase:", address);
       fetchLeaderboardAndRank(address);
     } catch (error) {
       console.error("Error saving wallet to Supabase:", error);
@@ -164,7 +168,6 @@ export default function Game() {
         .update({ points: newPoints, updated_at: new Date().toISOString() })
         .eq("address", address);
       if (error) throw error;
-      console.log("Points saved to Supabase:", newPoints);
       fetchLeaderboardAndRank(address);
     } catch (error) {
       console.error("Error saving points to Supabase:", error);
@@ -183,8 +186,6 @@ export default function Game() {
     try {
       let address: string | null = null;
 
-      console.log(`Attempting to connect ${provider} wallet...`);
-
       if (provider === "magicEden") {
         if (window.magicEden?.bitcoin) {
           await getAddress({
@@ -192,12 +193,9 @@ export default function Game() {
             payload: {
               purposes: [AddressPurpose.Ordinals, AddressPurpose.Payment],
               message: "Address for Froggy Folios game",
-              network: {
-                type: BitcoinNetworkType.Mainnet,
-              },
+              network: { type: BitcoinNetworkType.Mainnet },
             },
             onFinish: (response) => {
-              console.log("Magic Eden onFinish response:", response.addresses);
               const taprootAddress = response.addresses.find(
                 (addr: WalletAddress) => addr.purpose === AddressPurpose.Ordinals && addr.address.startsWith("bc1p")
               );
@@ -208,17 +206,13 @@ export default function Game() {
             },
           });
 
-          if (!address) {
-            throw new Error("No Taproot address (bc1p...) found");
-          }
+          if (!address) throw new Error("No Taproot address (bc1p...) found");
         } else {
-          console.log("Magic Eden wallet not detected.");
           alert("Magic Eden wallet not detected. Please install it.");
           window.open("https://wallet.magiceden.io/", "_blank");
           return;
         }
       } else if (provider === "xverse") {
-        // Type assertion for XverseProviders
         const xverse = (window as any).XverseProviders as {
           BitcoinProvider?: {
             request: (method: string, params: any) => Promise<{ result: any; error?: { message: string } }>;
@@ -226,57 +220,42 @@ export default function Game() {
         } | undefined;
 
         if (xverse?.BitcoinProvider) {
-          console.log("Xverse BitcoinProvider detected, requesting wallet_connect...");
           const connectResponse = await xverse.BitcoinProvider.request("wallet_connect", null);
-          console.log("Xverse connect response:", connectResponse);
-          if (!connectResponse.result) {
-            throw new Error(connectResponse.error?.message || "Xverse connection failed");
-          }
+          if (!connectResponse.result) throw new Error(connectResponse.error?.message || "Xverse connection failed");
 
           const params = {
             purposes: ["payment", "ordinals"],
             message: "Provide addresses for Froggy Folios game",
             network: { type: "Mainnet" },
           };
-          console.log("Requesting Xverse addresses with params:", params);
           const addressResponse = await xverse.BitcoinProvider.request("getAddresses", params);
-          console.log("Xverse address response:", addressResponse);
-          if (!addressResponse.result || !Array.isArray(addressResponse.result.addresses)) {
+          if (!addressResponse.result || !Array.isArray(addressResponse.result.addresses))
             throw new Error(addressResponse.error?.message || "Failed to fetch Xverse addresses");
-          }
 
           const taprootAddressItem = addressResponse.result.addresses.find(
             (addr: any) => addr.purpose === "ordinals" && addr.address.startsWith("bc1p")
           );
           address = taprootAddressItem?.address || null;
 
-          if (!address) {
-            throw new Error("No Taproot address (bc1p...) found");
-          }
+          if (!address) throw new Error("No Taproot address (bc1p...) found");
         } else {
-          console.log("Xverse wallet not detected.");
           alert("Xverse wallet not detected. Please install it.");
           window.open("https://www.xverse.app/", "_blank");
           return;
         }
       } else if (provider === "unisat") {
         if (window.unisat) {
-          console.log("UniSat wallet detected, requesting accounts...");
           try {
             const accounts = await window.unisat.requestAccounts();
-            console.log("UniSat accounts:", accounts);
             address = accounts.find((addr: string) => addr.startsWith("bc1p")) || null;
             if (!address) {
               const currentAccounts = await window.unisat.getAccounts();
-              console.log("UniSat current accounts:", currentAccounts);
               address = currentAccounts.find((addr: string) => addr.startsWith("bc1p")) || null;
             }
           } catch (e) {
-            console.error("UniSat connect failed:", e);
             throw new Error("Failed to connect UniSat wallet");
           }
         } else {
-          console.log("UniSat wallet not detected.");
           alert("UniSat wallet not detected. Please install it.");
           window.open("https://unisat.io/", "_blank");
           return;
@@ -288,10 +267,8 @@ export default function Game() {
         return;
       }
 
-      console.log("Setting walletAddress to:", address);
       setWalletAddress(address);
-      setPoints(0); // Reset points initially
-      console.log(`Wallet connected with address: ${address}`);
+      setPoints(0);
 
       const { data: existingData } = await supabase
         .from("game_users")
@@ -306,8 +283,7 @@ export default function Game() {
       }
     } catch (error) {
       console.error(`${provider} connection error:`, error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      alert(`Failed to connect ${provider} wallet: ${errorMessage}`);
+      alert(`Failed to connect ${provider} wallet: ${error instanceof Error ? error.message : "Unknown error"}`);
       setWalletAddress(null);
       setPoints(0);
       setUserRank(null);
@@ -317,7 +293,6 @@ export default function Game() {
   const disconnectWallet = useCallback(async () => {
     try {
       if (walletAddress) {
-        // Type assertion for XverseProviders in disconnect
         const xverse = (window as any).XverseProviders as {
           BitcoinProvider?: {
             request: (method: string, params: any) => Promise<any>;
@@ -325,13 +300,7 @@ export default function Game() {
         } | undefined;
 
         if (xverse?.BitcoinProvider) {
-          console.log("Disconnecting Xverse wallet...");
           await xverse.BitcoinProvider.request("wallet_disconnect", null);
-          console.log("Xverse wallet disconnected");
-        } else if (window.unisat) {
-          console.log("UniSat wallet disconnected (state cleared)");
-        } else if (window.magicEden?.bitcoin) {
-          console.log("Magic Eden wallet disconnected (state cleared)");
         }
         setWalletAddress(null);
         setPoints(0);
@@ -483,7 +452,6 @@ export default function Game() {
       return;
     }
     if (!isPlayingRef.current && canvasRef.current) {
-      console.log("Starting game with prediction:", predictedType);
       setPrediction(predictedType);
       predictionRef.current = predictedType;
       setCountdown(3);
@@ -584,110 +552,236 @@ export default function Game() {
     return `${rank}${medal}`;
   };
 
-  const handleLeaderboardRedirect = () => {
-    window.location.href = "/leaderboard";
-  };
-
-  console.log("Rendering with walletAddress:", walletAddress, "points:", points);
-
   return (
     <div
-      className={`${styles.container} ${theme === "dark" ? styles.dark : styles.light}`}
-      ref={containerRef}
-      style={{ visibility: "visible" }}
+      className={`min-h-screen flex flex-col ${
+        theme === "dark"
+          ? "bg-gradient-to-br from-pink-900 via-red-900 to-purple-900 text-white"
+          : "bg-gradient-to-br from-pink-200 via-red-200 to-purple-200 text-gray-900"
+      }`}
     >
-      <div className={styles.themeToggle}>
-        <button onClick={toggleTheme} className={`${styles.themeButton} ${theme === "dark" ? styles.themeButtonDark : styles.themeButtonLight}`}>
-          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-        </button>
-      </div>
-      <h1 className={styles.title}>Froggy Food Chain</h1>
-      {walletAddress ? (
-        <>
-          <div className={`${styles.pointsDisplay} ${theme === "dark" ? styles.dark : styles.light}`}>
-            <button
-              onClick={disconnectWallet}
-              className={`${styles.disconnectButton} ${theme === "dark" ? styles.disconnectButtonDark : styles.disconnectButtonLight}`}
+      {/* Header */}
+      <nav className="flex items-center justify-between px-4 py-3 md:py-4 bg-gradient-to-r from-purple-800 to-pink-800 shadow-lg">
+        <Link href="/" className="flex items-center space-x-2">
+          <Image
+            src="/logo.png"
+            alt="Froggy Logo"
+            width={48}
+            height={48}
+            className="rounded-full"
+          />
+          <span className="text-2xl md:text-3xl font-extrabold tracking-tight">Froggy Folios</span>
+        </Link>
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Link href="/">
+            <motion.span
+              className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                pathname === "/" ? "underline text-yellow-400" : ""
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Disconnect
-            </button>
-            <div className={styles.points}>Total points: {points}</div>
-            <div className={styles.userInfo}>
-              <span className={styles.userLabel}>user: </span>
-              <span className={styles.userAddress}>
-                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-              </span>
-              <span className={styles.rankLabel}>Rank: </span>
-              <span className={`${styles.rankValue} ${styles.rankHighlight}`}>
-                {getRankDisplay(userRank)}
-              </span>
-            </div>
-            <button
-              onClick={handleLeaderboardRedirect}
-              className={`${styles.leaderboardButton} ${theme === "dark" ? styles.leaderboardButtonDark : styles.leaderboardButtonLight}`}
+              Home
+            </motion.span>
+          </Link>
+          <Link href="/checker">
+            <motion.span
+              className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                pathname === "/checker" ? "underline text-yellow-400" : ""
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Check Leaderboard
-            </button>
+              Check WL
+            </motion.span>
+          </Link>
+          <Link href="/login">
+            <motion.span
+              className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                pathname === "/login" ? "underline text-yellow-400" : ""
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Apply for WL
+            </motion.span>
+          </Link>
+          <motion.button
+            onClick={toggleTheme}
+            className={`p-3 rounded-full ${
+              theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+            } shadow-md text-lg`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+          </motion.button>
+        </div>
+        {/* Mobile Menu Toggle */}
+        <div className="md:hidden">
+          <motion.button
+            onClick={toggleMenu}
+            className="p-2 rounded-full text-white text-2xl"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {isMenuOpen ? "✖" : "☰"}
+          </motion.button>
+        </div>
+      </nav>
+      {/* Mobile Menu Dropdown */}
+      {isMenuOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="md:hidden bg-gradient-to-r from-purple-800 to-pink-800 px-4 py-2"
+        >
+          <div className="flex flex-col space-y-2">
+            <Link href="/" onClick={toggleMenu}>
+              <span
+                className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                  pathname === "/" ? "underline text-yellow-400" : ""
+                }`}
+              >
+                Home
+              </span>
+            </Link>
+            <Link href="/checker" onClick={toggleMenu}>
+              <span
+                className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                  pathname === "/checker" ? "underline text-yellow-400" : ""
+                }`}
+              >
+                Check WL
+              </span>
+            </Link>
+            <Link href="/login" onClick={toggleMenu}>
+              <span
+                className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                  pathname === "/login" ? "underline text-yellow-400" : ""
+                }`}
+              >
+                Apply for WL
+              </span>
+            </Link>
+            <motion.button
+              onClick={toggleTheme}
+              className={`p-3 rounded-full w-fit ${
+                theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+              } shadow-md text-lg`}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+            </motion.button>
           </div>
-          {!prediction && !countdown && !isPlayingRef.current && (
-            <div className={styles.predictionContainer}>
-              <p className={styles.predictionText}>Who will win?</p>
-              <div className={styles.predictionRow}>
+        </motion.div>
+      )}
+
+      {/* Main Content */}
+      <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col items-center justify-center py-12 px-4">
+        <div
+          className={`${styles.container} ${theme === "dark" ? styles.dark : styles.light}`}
+          ref={containerRef}
+          style={{ visibility: "visible" }}
+        >
+          <h1 className={styles.title}>Froggy Food Chain</h1>
+          {walletAddress ? (
+            <>
+              <div className={`${styles.pointsDisplay} ${theme === "dark" ? styles.dark : styles.light}`}>
                 <button
-                  onClick={() => startGame("frog")}
-                  className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
+                  onClick={disconnectWallet}
+                  className={`${styles.disconnectButton} ${
+                    theme === "dark" ? styles.disconnectButtonDark : styles.disconnectButtonLight
+                  }`}
                 >
-                  🐸 Frog
+                  Disconnect
                 </button>
-                <button
-                  onClick={() => startGame("insect")}
-                  className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
-                >
-                  🪲 Insect
-                </button>
-                <button
-                  onClick={() => startGame("snake")}
-                  className={`${styles.predictionButton} ${theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight}`}
-                >
-                  🐍 Snake
-                </button>
+                <div className={styles.points}>Total Shelf points: {points}</div>
+                <div className={styles.userInfo}>
+                  <span className={styles.userLabel}>user: </span>
+                  <span className={styles.userAddress}>
+                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                  </span>
+                  <span className={styles.rankLabel}>Rank: </span>
+                  <span className={`${styles.rankValue} ${styles.rankHighlight}`}>
+                    {getRankDisplay(userRank)}
+                  </span>
+                </div>
               </div>
+              {!prediction && !countdown && !isPlayingRef.current && (
+                <div className={styles.predictionContainer}>
+                  <p className={styles.predictionText}>Who will win?</p>
+                  <div className={styles.predictionRow}>
+                    <button
+                      onClick={() => startGame("frog")}
+                      className={`${styles.predictionButton} ${
+                        theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight
+                      }`}
+                    >
+                      🐸 Frog
+                    </button>
+                    <button
+                      onClick={() => startGame("insect")}
+                      className={`${styles.predictionButton} ${
+                        theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight
+                      }`}
+                    >
+                      🪲 Insect
+                    </button>
+                    <button
+                      onClick={() => startGame("snake")}
+                      className={`${styles.predictionButton} ${
+                        theme === "dark" ? styles.predictionButtonDark : styles.predictionButtonLight
+                      }`}
+                    >
+                      🐍 Snake
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className={styles.predictionContainer}>
+              <button
+                onClick={() => setIsWalletModalOpen(true)}
+                className={`${styles.connectWalletButton} ${
+                  theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+                }`}
+              >
+                Connect Wallet
+              </button>
             </div>
           )}
-        </>
-      ) : (
-        <div className={styles.predictionContainer}>
-          <button
-            onClick={() => setIsWalletModalOpen(true)}
-            className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
-          >
-            Connect Wallet
-          </button>
+          {countdown !== null && (
+            <div className={styles.countdown} key={countdown}>
+              Simulation begins in: {countdown}...
+            </div>
+          )}
+          {prediction && (countdown !== null || isPlayingRef.current) && (
+            <div className={styles.predictionChoice}>
+              You chose: {prediction === "frog" ? "🐸 Frog" : prediction === "insect" ? "🪲 Insect" : "🐍 Snake"}
+            </div>
+          )}
+          <div className={`${styles.scoreBoard} ${theme === "dark" ? styles.scoreBoardDark : styles.scoreBoardLight}`}>
+            <span className={getLeadingElement() === "frog" ? styles.highlight : ""}>
+              🐸 {counts.frog}
+            </span>
+            <span className={getLeadingElement() === "insect" ? styles.highlight : ""}>
+              🪲 {counts.insect}
+            </span>
+            <span className={getLeadingElement() === "snake" ? styles.highlight : ""}>
+              🐍 {counts.snake}
+            </span>
+          </div>
+          <canvas ref={canvasRef} className={styles.gameCanvas} />
         </div>
-      )}
-      {countdown !== null && (
-        <div className={styles.countdown} key={countdown}>
-          Simulation begins in: {countdown}...
-        </div>
-      )}
-      {prediction && (countdown !== null || isPlayingRef.current) && (
-        <div className={styles.predictionChoice}>
-          You chose: {prediction === "frog" ? "🐸 Frog" : prediction === "insect" ? "🪲 Insect" : "🐍 Snake"}
-        </div>
-      )}
-      <div className={`${styles.scoreBoard} ${theme === "dark" ? styles.scoreBoardDark : styles.scoreBoardLight}`}>
-        <span className={getLeadingElement() === "frog" ? styles.highlight : ""}>
-          🐸 {counts.frog}
-        </span>
-        <span className={getLeadingElement() === "insect" ? styles.highlight : ""}>
-          🪲 {counts.insect}
-        </span>
-        <span className={getLeadingElement() === "snake" ? styles.highlight : ""}>
-          🐍 {counts.snake}
-        </span>
       </div>
-      <canvas ref={canvasRef} className={styles.gameCanvas} />
 
+      {/* Modals */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={resetGame}
@@ -703,9 +797,7 @@ export default function Game() {
             : "Snakes have claimed supremacy!"}
         </h2>
         <p
-          className={`${styles.modalText} ${
-            winner === prediction ? styles.congratsText : styles.badLuckText
-          }`}
+          className={`${styles.modalText} ${winner === prediction ? styles.congratsText : styles.badLuckText}`}
         >
           {winner === prediction
             ? "Congratulations! You predicted correctly! +10 points added!"
@@ -770,6 +862,22 @@ export default function Game() {
           Cancel
         </button>
       </Modal>
+
+      {/* Footer */}
+      <footer className="mt-auto px-4 py-4 bg-gradient-to-r from-purple-800 to-pink-800 text-center">
+        <div className="flex flex-col items-center space-y-2">
+          <Link href="https://x.com/froggyfolios" target="_blank" rel="noopener noreferrer">
+            <motion.span
+              className="text-2xl"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              𝕏
+            </motion.span>
+          </Link>
+          <p className="text-sm md:text-base">Powered by Froggy Folios</p>
+        </div>
+      </footer>
     </div>
   );
 }

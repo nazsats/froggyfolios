@@ -109,7 +109,7 @@ export default function Home() {
     >
       {/* Enhanced Header and Menu */}
       <nav className="flex items-center justify-between px-4 py-3 md:py-4 bg-gradient-to-r from-purple-800 to-pink-800 shadow-lg">
-        <div className="flex items-center space-x-2">
+        <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/logo.png"
             alt="Froggy Logo"
@@ -118,7 +118,7 @@ export default function Home() {
             className="rounded-full"
           />
           <span className="text-2xl md:text-3xl font-extrabold tracking-tight">Froggy Folios</span>
-        </div>
+        </Link>
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-4">
           <Link href="/">
@@ -127,7 +127,7 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Dashboard
+              Home
             </motion.span>
           </Link>
           <Link href="/checker">
@@ -183,7 +183,7 @@ export default function Home() {
           <div className="flex flex-col space-y-2">
             <Link href="/" onClick={toggleMenu}>
               <span className="text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                Dashboard
+                Home
               </span>
             </Link>
             <Link href="/checker" onClick={toggleMenu}>
@@ -246,24 +246,21 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={`flex-1 flex flex-col rounded-lg shadow-lg overflow-hidden border-4 border-purple-500/50 hover:border-purple-400 transition-colors aspect-square relative z-0`} // z-0 to ensure no overlap
+              className={`flex-1 flex flex-col rounded-lg shadow-lg overflow-hidden border-4 border-purple-500/50 hover:border-purple-400 transition-colors aspect-square relative z-0`}
             >
-              {/* Background Image */}
               <div className="relative w-full h-full">
                 <Image
                   src="/Game1.png"
                   alt="Froggy Food Chain"
                   layout="fill"
                   objectFit="cover"
-                  objectPosition="top" // Prioritize top of the image
+                  objectPosition="top"
                   className="rounded-t-lg"
                 />
-                {/* Overlay for Darkening Effect */}
                 <div className="absolute inset-0 bg-black/30 pointer-events-none rounded-t-lg" />
               </div>
-              {/* Play Now Button */}
               <div className="p-4 bg-gray-800/90">
-                <Link href="/game">
+                <Link href="/foodchain">
                   <motion.button
                     className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold text-base md:text-lg rounded-lg shadow-lg border-2 border-green-400/50 hover:border-green-300/50 transition-all duration-300 animate-pulse-glow"
                     whileHover={{ scale: 1.05 }}
@@ -280,24 +277,21 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className={`flex-1 flex flex-col rounded-lg shadow-lg overflow-hidden border-4 border-purple-500/50 hover:border-purple-400 transition-colors aspect-square relative z-0`} // z-0 to ensure no overlap
+              className={`flex-1 flex flex-col rounded-lg shadow-lg overflow-hidden border-4 border-purple-500/50 hover:border-purple-400 transition-colors aspect-square relative z-0`}
             >
-              {/* Background Image */}
               <div className="relative w-full h-full">
                 <Image
                   src="/Game2.png"
                   alt="Froggy Shelf"
                   layout="fill"
                   objectFit="cover"
-                  objectPosition="top" // Prioritize top of the image
+                  objectPosition="top"
                   className="rounded-t-lg"
                 />
-                {/* Overlay for Darkening Effect */}
                 <div className="absolute inset-0 bg-black/30 pointer-events-none rounded-t-lg" />
               </div>
-              {/* Play Now Button */}
               <div className="p-4 bg-gray-800/90">
-                <Link href="/game2">
+                <Link href="/frogshelf">
                   <motion.button
                     className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold text-base md:text-lg rounded-lg shadow-lg border-2 border-green-400/50 hover:border-green-300/50 transition-all duration-300 animate-pulse-glow"
                     whileHover={{ scale: 1.05 }}
@@ -317,7 +311,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className={`p-6 rounded-lg shadow-lg ${
               theme === "dark" ? "bg-gray-800/90" : "bg-white/90"
-            } border border-purple-500/50 relative z-0`} // z-0 to ensure no overlap
+            } border border-purple-500/50 relative z-0`}
           >
             <h3 className="text-lg md:text-xl font-semibold mb-4 flex items-center">
               <span className="mr-2">🌐</span> Online Now
@@ -347,7 +341,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className={`p-6 rounded-lg shadow-lg ${
               theme === "dark" ? "bg-gray-800/90" : "bg-white/90"
-            } border border-purple-500/50 relative z-0`} // z-0 to ensure no overlap
+            } border border-purple-500/50 relative z-0`}
           >
             <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center">
               <span className="mr-2">🏆</span> Leaderboard
@@ -384,6 +378,22 @@ export default function Home() {
           </motion.div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-auto px-4 py-4 bg-gradient-to-r from-purple-800 to-pink-800 text-center">
+        <div className="flex flex-col items-center space-y-2">
+          <Link href="https://x.com/froggyfolios" target="_blank" rel="noopener noreferrer">
+            <motion.span
+              className="text-2xl"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              𝕏
+            </motion.span>
+          </Link>
+          <p className="text-sm md:text-base">Powered by Froggy Folios</p>
+        </div>
+      </footer>
     </div>
   );
 }

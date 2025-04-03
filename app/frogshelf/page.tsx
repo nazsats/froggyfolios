@@ -7,6 +7,8 @@ import Modal from "react-modal";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
 import { getAddress, AddressPurpose, BitcoinNetworkType } from "sats-connect";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const supabase = createClient(
   "https://taiyharwcaiumvqqxpml.supabase.co",
@@ -42,8 +44,11 @@ export default function Game2() {
   const [tweetCooldown, setTweetCooldown] = useState<number | null>(null);
   const [tweetWindowEnd, setTweetWindowEnd] = useState<Date | null>(null);
   const [cooldownSecondsLeft, setCooldownSecondsLeft] = useState<number>(0);
-  const [hasTweeted, setHasTweeted] = useState<boolean>(false); // Track if tweet was used
-  const [hasEnded, setHasEnded] = useState<boolean>(false); // Track if game has ended to prevent re-trigger
+  const [hasTweeted, setHasTweeted] = useState<boolean>(false);
+  const [hasEnded, setHasEnded] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const pathname = usePathname(); // Get current route
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
@@ -65,8 +70,8 @@ export default function Game2() {
       if (secondsLeft === 0) {
         setPlayCount(0);
         setCooldownEnd(null);
-        setHasTweeted(false); // Reset tweet status after cooldown
-        savePlayerData(0, null, true); // Reset after cooldown
+        setHasTweeted(false);
+        savePlayerData(0, null, true);
       }
     };
     updateCooldown();
@@ -132,25 +137,31 @@ export default function Game2() {
       } else {
         setPlayCount(newPlayCount);
         setLastPlayedAt(now);
-        setTotalScore(prev => prev + newScore);
+        setTotalScore((prev) => prev + newScore);
         setLastGameScore(newScore);
         if (newCooldownEnd !== undefined) setCooldownEnd(newCooldownEnd);
       }
-      return newPlayCount; // Return the new playCount for synchronization
+      return newPlayCount;
     },
     [walletAddress, playCount, totalScore, cooldownEnd, tweetWindowEnd]
   );
 
   const getAllowedTime = (): number => {
-    if (playCount === 5 && tweetCooldown === 0 && hasTweeted) return 30; // Bonus life after tweet
-    if (playCount >= 5) return 0; // No time until cooldown expires
+    if (playCount === 5 && tweetCooldown === 0 && hasTweeted) return 30;
+    if (playCount >= 5) return 0;
     switch (playCount) {
-      case 0: return 60;
-      case 1: return 40;
-      case 2: return 30;
-      case 3: return 20;
-      case 4: return 10;
-      default: return 0;
+      case 0:
+        return 60;
+      case 1:
+        return 40;
+      case 2:
+        return 30;
+      case 3:
+        return 20;
+      case 4:
+        return 10;
+      default:
+        return 0;
     }
   };
 
@@ -176,23 +187,24 @@ export default function Game2() {
   const handleTweetForLife = () => {
     if (playCount !== 5 || tweetCooldown !== null || !canTweet()) return;
 
-    const tweetText = "🐸 Just ran out of energy in @froggyfolios!\n🔥 The battle against the snakes is intense! Claiming my free energy to keep playing!\n\nPlay now: https://www.froggyfolios.xyz/game2";
+    const tweetText =
+      "🐸 Just ran out of energy in @froggyfolios!\n🔥 The battle against the snakes is intense! Claiming my free energy to keep playing!\n\nPlay now: https://www.froggyfolios.xyz/game2";
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, "_blank", "width=600,height=400");
 
     setTweetCooldown(10);
-    setHasTweeted(true); // Mark that the tweet has been used
+    setHasTweeted(true);
     const countdown = setInterval(() => {
       setTweetCooldown((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(countdown);
-          setTweetCooldown(0); // Bonus life ready
+          setTweetCooldown(0);
           setTimeLeft(30);
           setIsTweetModalOpen(false);
-          setGameStarted(false); // Reset state, but don’t start yet
+          setGameStarted(false);
           setIsGameOver(false);
           setGameObjects([]);
-          setHasEnded(false); // Reset for bonus life
+          setHasEnded(false);
           return 0;
         }
         return prev - 1;
@@ -204,6 +216,10 @@ export default function Game2() {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   const connectWallet = useCallback(async (provider: "magicEden" | "xverse" | "unisat") => {
@@ -220,10 +236,12 @@ export default function Game2() {
               network: { type: BitcoinNetworkType.Mainnet },
             },
             onFinish: (response) => {
-              const found = response.addresses.find(a => a.purpose === AddressPurpose.Ordinals && a.address.startsWith("bc1p"));
+              const found = response.addresses.find((a) => a.purpose === AddressPurpose.Ordinals && a.address.startsWith("bc1p"));
               address = found?.address || null;
             },
-            onCancel: () => { throw new Error("Request canceled"); },
+            onCancel: () => {
+              throw new Error("Request canceled");
+            },
           });
         } else {
           alert("Magic Eden wallet not detected");
@@ -249,7 +267,7 @@ export default function Game2() {
       } else if (provider === "unisat") {
         if (window.unisat) {
           const accounts = await window.unisat.requestAccounts();
-          address = accounts.find(a => a.startsWith("bc1p")) || null;
+          address = accounts.find((a) => a.startsWith("bc1p")) || null;
         } else {
           alert("UniSat wallet not detected");
           window.open("https://unisat.io", "_blank");
@@ -271,10 +289,10 @@ export default function Game2() {
     if (!gameStarted || isGameOver || hasEnded) return;
     if (timeLeft <= 0) {
       setIsGameOver(true);
-      setHasEnded(true); // Mark game as ended to prevent re-trigger
+      setHasEnded(true);
       const oneHourLater = playCount >= 5 ? new Date(Date.now() + 60 * 60 * 1000) : undefined;
       savePlayerData(score, oneHourLater, playCount > 5).then((newPlayCount) => {
-        console.log("Updated playCount after save:", newPlayCount); // Debug log
+        console.log("Updated playCount after save:", newPlayCount);
         if (playCount === 4) {
           const fiveMinutesLater = new Date(Date.now() + 5 * 60 * 1000);
           setTweetWindowEnd(fiveMinutesLater);
@@ -299,8 +317,14 @@ export default function Game2() {
     if (gameStarted && !isGameOver && gameRef.current) {
       const spawnInterval = setInterval(() => {
         const rect = gameRef.current!.getBoundingClientRect();
-        const types: ("egg" | "frog" | "goldenfrog" | "insect" | "leaf" | "snake")[] = 
-          ["egg", "frog", "goldenfrog", "insect", "leaf", "snake"];
+        const types: ("egg" | "frog" | "goldenfrog" | "insect" | "leaf" | "snake")[] = [
+          "egg",
+          "frog",
+          "goldenfrog",
+          "insect",
+          "leaf",
+          "snake",
+        ];
         const type = types[Math.floor(Math.random() * types.length)];
         const x = Math.random() * (rect.width - 60);
         const y = Math.random() * (rect.height - 60);
@@ -311,10 +335,7 @@ export default function Game2() {
         setTimeout(() => {
           setGameObjects((prev) => {
             const now = Date.now();
-            return prev.filter(obj => 
-              obj.id !== newObject.id && 
-              (now - obj.spawnTime < 3000)
-            );
+            return prev.filter((obj) => obj.id !== newObject.id && now - obj.spawnTime < 3000);
           });
         }, 3000);
       }, 1000);
@@ -326,32 +347,42 @@ export default function Game2() {
   const handleObjectClick = (obj: GameObject) => {
     let points = 0;
     switch (obj.type) {
-      case "egg": points = 7; break;
-      case "frog": points = 5; break;
-      case "goldenfrog": points = 10; break;
-      case "insect": points = 2; break;
-      case "leaf": points = 1; break;
+      case "egg":
+        points = 7;
+        break;
+      case "frog":
+        points = 5;
+        break;
+      case "goldenfrog":
+        points = 10;
+        break;
+      case "insect":
+        points = 2;
+        break;
+      case "leaf":
+        points = 1;
+        break;
       case "snake":
         setScore(0);
         setScorePopup({ x: obj.x, y: obj.y, points: 0 });
         setTimeout(() => setScorePopup(null), 700);
-        setGameObjects((prev) => prev.filter(o => o.id !== obj.id));
+        setGameObjects((prev) => prev.filter((o) => o.id !== obj.id));
         return;
     }
     setScore((prev) => prev + points);
     setScorePopup({ x: obj.x, y: obj.y, points });
     setTimeout(() => setScorePopup(null), 700);
-    setGameObjects((prev) => prev.filter(o => o.id !== obj.id));
+    setGameObjects((prev) => prev.filter((o) => o.id !== obj.id));
   };
 
   const resetGame = () => {
-    console.log("playCount before reset:", playCount); // Debug log
+    console.log("playCount before reset:", playCount);
     setGameStarted(false);
     setTimeLeft(getAllowedTime());
     setScore(0);
     setIsGameOver(false);
     setGameObjects([]);
-    setHasEnded(false); // Reset for next game
+    setHasEnded(false);
     if (playCount > 5) {
       setPlayCount(0);
       setTweetCooldown(null);
@@ -369,7 +400,7 @@ export default function Game2() {
     setIsGameOver(false);
     setGameObjects([]);
     setGameStarted(true);
-    setHasEnded(false); // Reset for new game start
+    setHasEnded(false);
   };
 
   const handleSortAgain = () => {
@@ -378,169 +409,301 @@ export default function Game2() {
   };
 
   return (
-    <div className={`${styles.container} ${theme === "dark" ? styles.dark : styles.light}`}>
-      <div className={styles.themeToggle}>
-        <button 
-          onClick={toggleTheme} 
-          className={`${styles.themeButton} ${theme === "dark" ? styles.themeButtonDark : styles.themeButtonLight}`}
+    <div
+      className={`min-h-screen flex flex-col ${
+        theme === "dark"
+          ? "bg-gradient-to-br from-pink-900 via-red-900 to-purple-900 text-white"
+          : "bg-gradient-to-br from-pink-200 via-red-200 to-purple-200 text-gray-900"
+      }`}
+    >
+      {/* Header */}
+      <nav className="flex items-center justify-between px-4 py-3 md:py-4 bg-gradient-to-r from-purple-800 to-pink-800 shadow-lg">
+        <Link href="/" className="flex items-center space-x-2">
+          <Image
+            src="/logo.png"
+            alt="Froggy Logo"
+            width={48}
+            height={48}
+            className="rounded-full"
+          />
+          <span className="text-2xl md:text-3xl font-extrabold tracking-tight">Froggy Folios</span>
+        </Link>
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Link href="/">
+            <motion.span
+              className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                pathname === "/" ? "underline text-yellow-400" : ""
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Home
+            </motion.span>
+          </Link>
+          <Link href="/checker">
+            <motion.span
+              className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                pathname === "/checker" ? "underline text-yellow-400" : ""
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Check WL
+            </motion.span>
+          </Link>
+          <Link href="/login">
+            <motion.span
+              className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                pathname === "/login" ? "underline text-yellow-400" : ""
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Apply for WL
+            </motion.span>
+          </Link>
+          <motion.button
+            onClick={toggleTheme}
+            className={`p-3 rounded-full ${
+              theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+            } shadow-md text-lg`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+          </motion.button>
+        </div>
+        {/* Mobile Menu Toggle */}
+        <div className="md:hidden">
+          <motion.button
+            onClick={toggleMenu}
+            className="p-2 rounded-full text-white text-2xl"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {isMenuOpen ? "✖" : "☰"}
+          </motion.button>
+        </div>
+      </nav>
+      {/* Mobile Menu Dropdown */}
+      {isMenuOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="md:hidden bg-gradient-to-r from-purple-800 to-pink-800 px-4 py-2"
         >
-          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-        </button>
-      </div>
-
-      <h1 className={styles.title}>Froggy Folios!</h1>
-
-      {!walletAddress && (
-        <motion.button
-          onClick={() => setIsWalletModalOpen(true)}
-          className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
-          whileHover={{ scale: 1.05 }}
-        >
-          Connect Wallet
-        </motion.button>
+          <div className="flex flex-col space-y-2">
+            <Link href="/" onClick={toggleMenu}>
+              <span
+                className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                  pathname === "/" ? "underline text-yellow-400" : ""
+                }`}
+              >
+                Home
+              </span>
+            </Link>
+            <Link href="/checker" onClick={toggleMenu}>
+              <span
+                className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                  pathname === "/checker" ? "underline text-yellow-400" : ""
+                }`}
+              >
+                Check WL
+              </span>
+            </Link>
+            <Link href="/login" onClick={toggleMenu}>
+              <span
+                className={`text-lg font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors ${
+                  pathname === "/login" ? "underline text-yellow-400" : ""
+                }`}
+              >
+                Apply for WL
+              </span>
+            </Link>
+            <motion.button
+              onClick={toggleTheme}
+              className={`p-3 rounded-full w-fit ${
+                theme === "dark" ? "bg-gray-700 text-yellow-400" : "bg-gray-200 text-gray-700"
+              } shadow-md text-lg`}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+            </motion.button>
+          </div>
+        </motion.div>
       )}
 
-      {walletAddress && (
-        <div className={styles.pointsDisplay}>
-          <div className={styles.userInfo}>
-            <span className={styles.userLabel}>Frog Scholar:</span>
-            <span className={styles.userAddress}>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-          </div>
+      {/* Main Content */}
+      <div className="w-full max-w-5xl mx-auto flex-grow flex flex-col items-center justify-center py-12 px-4">
+        <div className={`${styles.container} ${theme === "dark" ? styles.dark : styles.light}`}>
+          <h1 className={styles.title}>Froggy Folios!</h1>
 
-          <p className={styles.points} style={{ fontSize: "1.5rem", fontWeight: 600 }}>
-            Total Folio Points: {totalScore}
-          </p>
-
-          <p className={styles.predictionText} style={{ fontSize: "1rem" }}>
-            Last Shelf: {lastGameScore}
-          </p>
-
-          <div style={{ width: "100%", maxWidth: "300px", margin: "10px auto" }}>
-            <p style={{ textAlign: "center", marginBottom: "5px" }}>
-              Shelves Organized: {Math.min(playCount, 5)}/{playCount === 5 && tweetCooldown === 0 && hasTweeted ? 6 : 5}
-            </p>
-            <div style={{
-              width: "100%",
-              height: "20px",
-              background: theme === "dark" ? "#333" : "#ddd",
-              borderRadius: "10px",
-              overflow: "hidden"
-            }}>
-              <div style={{
-                width: `${(Math.min(playCount, 5) / (playCount === 5 && tweetCooldown === 0 && hasTweeted ? 6 : 5)) * 100}%`,
-                height: "100%",
-                background: "#00ff99",
-                transition: "width 0.3s ease"
-              }} />
-            </div>
-          </div>
-
-          {!canPlay() && cooldownSecondsLeft > 0 && (
-            <p style={{ textAlign: "center", color: "#ff4444" }}>
-              Cooldown: {Math.floor(cooldownSecondsLeft / 60)}m {cooldownSecondsLeft % 60}s remaining
-            </p>
+          {!walletAddress && (
+            <motion.button
+              onClick={() => setIsWalletModalOpen(true)}
+              className={`${styles.connectWalletButton} ${
+                theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+              }`}
+              whileHover={{ scale: 1.05 }}
+            >
+              Connect Wallet
+            </motion.button>
           )}
 
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            {!gameStarted && !isGameOver && (canPlay() || (playCount === 5 && tweetCooldown === 0 && hasTweeted)) && (
-              <motion.button
-                onClick={startGame}
-                className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
-                whileHover={{ scale: 1.1 }}
+          {walletAddress && (
+            <div className={styles.pointsDisplay}>
+              <div className={styles.userInfo}>
+                <span className={styles.userLabel}>Frog Scholar:</span>
+                <span className={styles.userAddress}>
+                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </span>
+              </div>
+
+              <p className={styles.points} style={{ fontSize: "1.5rem", fontWeight: 600 }}>
+                Total Folio Points: {totalScore}
+              </p>
+
+              <p className={styles.predictionText} style={{ fontSize: "1rem" }}>
+                Last Shelf: {lastGameScore}
+              </p>
+
+              <div style={{ width: "100%", maxWidth: "300px", margin: "10px auto" }}>
+                <p style={{ textAlign: "center", marginBottom: "5px" }}>
+                  Shelves Organized: {Math.min(playCount, 5)}/{playCount === 5 && tweetCooldown === 0 && hasTweeted ? 6 : 5}
+                </p>
+                <div
+                  style={{
+                    width: "100%",
+                    height: "20px",
+                    background: theme === "dark" ? "#333" : "#ddd",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${(Math.min(playCount, 5) / (playCount === 5 && tweetCooldown === 0 && hasTweeted ? 6 : 5)) * 100}%`,
+                      height: "100%",
+                      background: "#00ff99",
+                      transition: "width 0.3s ease",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {!canPlay() && cooldownSecondsLeft > 0 && (
+                <p style={{ textAlign: "center", color: "#ff4444" }}>
+                  Cooldown: {Math.floor(cooldownSecondsLeft / 60)}m {cooldownSecondsLeft % 60}s remaining
+                </p>
+              )}
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                {!gameStarted && !isGameOver && (canPlay() || (playCount === 5 && tweetCooldown === 0 && hasTweeted)) && (
+                  <motion.button
+                    onClick={startGame}
+                    className={`${styles.connectWalletButton} ${
+                      theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    🐸 Start Sorting
+                  </motion.button>
+                )}
+                <motion.button
+                  onClick={() => setIsRulesModalOpen(true)}
+                  className={`${styles.connectWalletButton} ${
+                    theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                >
+                  📚 Library Rules
+                </motion.button>
+                {!gameStarted && !isGameOver && playCount < 5 && (
+                  <motion.button
+                    onClick={handleSortAgain}
+                    className={`${styles.connectWalletButton} ${
+                      theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    🔄 Sort Again
+                  </motion.button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {(gameStarted || isGameOver) && (
+            <div className={styles.pointsDisplay}>
+              <p className={styles.points} style={{ fontSize: "2.2rem", fontWeight: 800 }}>
+                Current Shelf Points: {score}
+              </p>
+              <p className={styles.predictionText}>
+                ⏱ {`${Math.floor(timeLeft / 60)}:${timeLeft % 60 < 10 ? "0" : ""}${timeLeft % 60}`}
+              </p>
+            </div>
+          )}
+
+          <div
+            className={styles.gameCanvas}
+            ref={gameRef}
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              width: "95%",
+              maxWidth: "700px",
+              height: "min(60vh, 500px)",
+              border: "4px solid #00ff99",
+              borderRadius: "15px",
+              boxShadow: "0 0 20px rgba(0, 255, 153, 0.3)",
+              margin: "20px auto",
+              zIndex: 2,
+              background: theme === "dark" ? "#0f172a" : "#f0fdfa",
+            }}
+          >
+            <AnimatePresence>
+              {gameObjects.map((obj) => (
+                <motion.div
+                  key={obj.id}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  style={{ position: "absolute", top: obj.y, left: obj.x, width: 60, height: 60, zIndex: 10 }}
+                  onClick={() => handleObjectClick(obj)}
+                >
+                  <Image src={`/gameElements/${obj.type}.png`} alt={obj.type} width={60} height={60} unoptimized />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {scorePopup && (
+              <motion.div
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: 1, y: -30 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.7 }}
+                style={{
+                  position: "absolute",
+                  top: scorePopup.y,
+                  left: scorePopup.x,
+                  fontSize: "1.5rem",
+                  color: "#00ffcc",
+                  fontWeight: "bold",
+                }}
               >
-                🐸 Start Sorting
-              </motion.button>
-            )}
-            <motion.button
-              onClick={() => setIsRulesModalOpen(true)}
-              className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
-              whileHover={{ scale: 1.1 }}
-            >
-              📚 Library Rules
-            </motion.button>
-            {!gameStarted && !isGameOver && playCount < 5 && (
-              <motion.button
-                onClick={handleSortAgain}
-                className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
-                whileHover={{ scale: 1.1 }}
-              >
-                🔄 Sort Again
-              </motion.button>
+                {scorePopup.points === 0 ? "Eaten!" : `+${scorePopup.points}`}
+              </motion.div>
             )}
           </div>
         </div>
-      )}
-
-      {(gameStarted || isGameOver) && (
-        <div className={styles.pointsDisplay}>
-          <p className={styles.points} style={{ fontSize: "2.2rem", fontWeight: 800 }}>
-            Current Shelf Points: {score}
-          </p>
-          <p className={styles.predictionText}>
-            ⏱ {`${Math.floor(timeLeft / 60)}:${timeLeft % 60 < 10 ? "0" : ""}${timeLeft % 60}`}
-          </p>
-        </div>
-      )}
-
-      <div
-        className={styles.gameCanvas}
-        ref={gameRef}
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          width: "95%",
-          maxWidth: "700px",
-          height: "min(60vh, 500px)",
-          border: "4px solid #00ff99",
-          borderRadius: "15px",
-          boxShadow: "0 0 20px rgba(0, 255, 153, 0.3)",
-          margin: "20px auto",
-          zIndex: 2,
-          background: theme === "dark" ? "#0f172a" : "#f0fdfa"
-        }}
-      >
-        <AnimatePresence>
-          {gameObjects.map((obj) => (
-            <motion.div
-              key={obj.id}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              style={{ position: "absolute", top: obj.y, left: obj.x, width: 60, height: 60, zIndex: 10 }}
-              onClick={() => handleObjectClick(obj)}
-            >
-              <Image 
-                src={`/gameElements/${obj.type}.png`}
-                alt={obj.type} 
-                width={60} 
-                height={60} 
-                unoptimized 
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {scorePopup && (
-          <motion.div
-            initial={{ opacity: 0, y: 0 }}
-            animate={{ opacity: 1, y: -30 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.7 }}
-            style={{ 
-              position: "absolute", 
-              top: scorePopup.y, 
-              left: scorePopup.x, 
-              fontSize: "1.5rem", 
-              color: "#00ffcc", 
-              fontWeight: "bold" 
-            }}
-          >
-            {scorePopup.points === 0 ? "Eaten!" : `+${scorePopup.points}`}
-          </motion.div>
-        )}
       </div>
 
+      {/* Modals */}
       <Modal
         isOpen={isWalletModalOpen}
         onRequestClose={() => setIsWalletModalOpen(false)}
@@ -549,27 +712,27 @@ export default function Game2() {
       >
         <h2 className={styles.modalTitle}>Choose Your Frog Wallet</h2>
         <div className={styles.walletOptions}>
-          <button 
-            onClick={() => connectWallet("magicEden")} 
+          <button
+            onClick={() => connectWallet("magicEden")}
             className={`${styles.walletButton} ${theme === "dark" ? styles.walletButtonDark : styles.walletButtonLight}`}
           >
             Magic Eden
           </button>
-          <button 
-            onClick={() => connectWallet("xverse")} 
+          <button
+            onClick={() => connectWallet("xverse")}
             className={`${styles.walletButton} ${theme === "dark" ? styles.walletButtonDark : styles.walletButtonLight}`}
           >
             Xverse
           </button>
-          <button 
-            onClick={() => connectWallet("unisat")} 
+          <button
+            onClick={() => connectWallet("unisat")}
             className={`${styles.walletButton} ${theme === "dark" ? styles.walletButtonDark : styles.walletButtonLight}`}
           >
             UniSat
           </button>
         </div>
-        <button 
-          onClick={() => setIsWalletModalOpen(false)} 
+        <button
+          onClick={() => setIsWalletModalOpen(false)}
           className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
         >
           Hop Away
@@ -578,7 +741,7 @@ export default function Game2() {
 
       <Modal
         isOpen={isGameOver}
-        onRequestClose={() => setIsGameOver(false)} // Only close modal, don’t reset
+        onRequestClose={() => setIsGameOver(false)}
         className={`${styles.modal} ${theme === "dark" ? styles.modalDark : styles.modalLight}`}
         overlayClassName={styles.modalOverlay}
       >
@@ -587,14 +750,14 @@ export default function Game2() {
         <p className={styles.modalText}>Total Folio Points: {totalScore}</p>
         {playCount < 5 && (
           <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            <button 
-              onClick={handleSortAgain} 
+            <button
+              onClick={handleSortAgain}
               className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
             >
               Sort Again
             </button>
-            <button 
-              onClick={() => setIsGameOver(false)} 
+            <button
+              onClick={() => setIsGameOver(false)}
               className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
             >
               Close
@@ -620,7 +783,9 @@ export default function Game2() {
         {canTweet() && tweetCooldown === null && (
           <motion.button
             onClick={handleTweetForLife}
-            className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
+            className={`${styles.connectWalletButton} ${
+              theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+            }`}
             whileHover={{ scale: 1.1 }}
           >
             Tweet Now
@@ -628,14 +793,16 @@ export default function Game2() {
         )}
         {tweetCooldown !== null && tweetCooldown > 0 && (
           <button
-            className={`${styles.connectWalletButton} ${theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight}`}
+            className={`${styles.connectWalletButton} ${
+              theme === "dark" ? styles.connectWalletButtonDark : styles.connectWalletButtonLight
+            }`}
             disabled
           >
             Claiming in {tweetCooldown}s
           </button>
         )}
-        <button 
-          onClick={() => setIsTweetModalOpen(false)} 
+        <button
+          onClick={() => setIsTweetModalOpen(false)}
           className={`${styles.closeButton} ${theme === "dark" ? styles.closeButtonDark : styles.closeButtonLight}`}
         >
           Close
@@ -663,7 +830,7 @@ export default function Game2() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <h2 
+          <h2
             className={styles.modalTitle}
             style={{
               fontSize: "2rem",
@@ -675,7 +842,7 @@ export default function Game2() {
           >
             📚 Froggy Folios Library Rules
           </h2>
-          <p 
+          <p
             style={{
               fontSize: "1.1rem",
               color: theme === "dark" ? "#e5e7eb" : "#4b5563",
@@ -685,12 +852,12 @@ export default function Game2() {
           >
             Welcome to the Froggy Folios Library, where our amphibious librarian needs your help sorting the shelves!
           </p>
-          <ul 
-            style={{ 
-              listStyleType: "none", 
-              padding: "0", 
-              textAlign: "left", 
-              fontSize: "1rem", 
+          <ul
+            style={{
+              listStyleType: "none",
+              padding: "0",
+              textAlign: "left",
+              fontSize: "1rem",
               color: theme === "dark" ? "#d1d5db" : "#6b7280",
             }}
           >
@@ -718,16 +885,20 @@ export default function Game2() {
               </ul>
             </li>
             <li style={{ marginBottom: "15px" }}>
-              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Book Spawning:</strong> Items pop up every second—don’t let them pile up!
+              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Book Spawning:</strong> Items pop up every
+              second—don’t let them pile up!
             </li>
             <li style={{ marginBottom: "15px" }}>
-              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Shelf Life:</strong> Items stick around until you grab ‘em or they hop off after 3 seconds.
+              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Shelf Life:</strong> Items stick around
+              until you grab ‘em or they hop off after 3 seconds.
             </li>
             <li style={{ marginBottom: "15px" }}>
-              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Time Crunch:</strong> Shelf time shrinks each round (60s, 40s, 30s, 20s, 10s), then resets after a 1-hour cooldown or tweet for a bonus 30s round!
+              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Time Crunch:</strong> Shelf time shrinks
+              each round (60s, 40s, 30s, 20s, 10s), then resets after a 1-hour cooldown or tweet for a bonus 30s round!
             </li>
             <li style={{ marginBottom: "15px" }}>
-              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Score Stacking:</strong> Your Total Folio Points grow with every shelf you sort!
+              <strong style={{ color: theme === "dark" ? "#00ffcc" : "#059669" }}>Score Stacking:</strong> Your Total Folio
+              Points grow with every shelf you sort!
             </li>
           </ul>
           <motion.button
@@ -753,8 +924,16 @@ export default function Game2() {
         </div>
       </Modal>
 
-      <footer style={{ marginTop: "2rem", padding: "1rem", fontSize: "0.85rem", opacity: 0.6 }}>
-        © 2025 Froggy Folios
+      {/* Footer */}
+      <footer className="mt-auto px-4 py-4 bg-gradient-to-r from-purple-800 to-pink-800 text-center">
+        <div className="flex flex-col items-center space-y-2">
+          <Link href="https://x.com/froggyfolios" target="_blank" rel="noopener noreferrer">
+            <motion.span className="text-2xl" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              𝕏
+            </motion.span>
+          </Link>
+          <p className="text-sm md:text-base">Powered by Froggy Folios</p>
+        </div>
       </footer>
     </div>
   );
