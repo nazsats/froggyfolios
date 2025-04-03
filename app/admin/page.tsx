@@ -23,20 +23,22 @@ export default function AdminPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalEntries, setTotalEntries] = useState(0); // New state for total count
   const [expandedMessages, setExpandedMessages] = useState<{ [key: number]: boolean }>({});
   const entriesPerPage = 20;
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
-    const { data: tasksData, error: tasksError } = await supabase
+    const { data: tasksData, error: tasksError, count } = await supabase
       .from("tasks")
-      .select("*")
+      .select("*", { count: "exact" }) // Fetch total count
       .order("id", { ascending: true })
       .range((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage - 1);
 
     if (tasksError) {
       console.error("Error fetching tasks:", tasksError);
       setSubmissions([]);
+      setTotalEntries(0);
       setLoading(false);
       return;
     }
@@ -52,6 +54,7 @@ export default function AdminPanel() {
     );
 
     setSubmissions(submissionsWithUsernames);
+    setTotalEntries(count || 0); // Set total count from the database
     setLoading(false);
   }, [currentPage]);
 
@@ -117,7 +120,7 @@ export default function AdminPanel() {
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
-      .ilike("twitterusername", `%${searchQuery}%`)
+      .ilike("twitterUsername", `%${searchQuery}%`) // Fixed column name case
       .single();
 
     if (!error && data) {
@@ -139,11 +142,9 @@ export default function AdminPanel() {
     }));
   };
 
-  const totalEntries = submissions.length;
   const totalPages = Math.ceil(totalEntries / entriesPerPage);
   const paginatedSubmissions = submissions;
 
-  // Ensure this is the only definition of handlePageChange
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -361,10 +362,19 @@ export default function AdminPanel() {
               User Details
             </h3>
             <div className="w-full text-gray-800 space-y-4">
-              <p><strong>Username:</strong> {selectedSubmission.twitterUsername || "N/A"}</p>
-              <p><strong>Wallet:</strong> {selectedSubmission.wallet}</p>
-              <p><strong>Message:</strong> {selectedSubmission.message}</p>
-              <p><strong>Status:</strong> <span className="text-yellow-600 font-semibold">{selectedSubmission.status}</span></p>
+              <p>
+                <strong>Username:</strong> {selectedSubmission.twitterUsername || "N/A"}
+              </p>
+              <p>
+                <strong>Wallet:</strong> {selectedSubmission.wallet}
+              </p>
+              <p>
+                <strong>Message:</strong> {selectedSubmission.message}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                <span className="text-yellow-600 font-semibold">{selectedSubmission.status}</span>
+              </p>
             </div>
             <div className="flex flex-wrap gap-2 mt-6">
               <motion.button
