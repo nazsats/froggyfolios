@@ -188,7 +188,7 @@ export default function Game2() {
     if (playCount !== 5 || tweetCooldown !== null || !canTweet()) return;
 
     const tweetText =
-      "🐸 Just ran out of energy in @froggyfolios!\n🔥 The battle against the snakes is intense! Claiming my free energy to keep playing!\n\nPlay now: https://www.froggyfolios.xyz/game2";
+      "🐸 Just ran out of energy in @froggyfolios!\n🔥 The battle against the snakes is intense! Claiming my free energy to keep playing!\n\nPlay now: https://www.froggyfolios.xyz/frogshelf";
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, "_blank", "width=600,height=400");
 
