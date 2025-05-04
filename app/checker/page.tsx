@@ -254,196 +254,235 @@ export default function Checker() {
 
       {/* Popup for Whitelist Result */}
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
-          {whitelistType === "gtdFreeMint" ? (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, type: "spring" }}
-              className={`max-w-md w-full p-8 ${
-                theme === "dark"
-                  ? "bg-gradient-to-br from-yellow-700 via-green-700 to-blue-700"
-                  : "bg-gradient-to-br from-yellow-300 via-green-300 to-blue-300"
-              } rounded-2xl shadow-2xl border ${
-                theme === "dark" ? "border-gray-700" : "border-gray-200"
-              } relative overflow-hidden flex flex-col items-center justify-center`}
-            >
-              <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-20 pointer-events-none" />
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
-              >
-                <Image
-                  src="/emojis/stareye.png"
-                  alt="Stareye Frog"
-                  width={300}
-                  height={300}
-                  className="drop-shadow-lg"
-                />
-              </motion.div>
-              <motion.h3
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className={`text-3xl font-extrabold mb-2 text-center ${
-                  theme === "dark" ? "text-white" : "text-gray-800"
-                } drop-shadow-md`}
-              >
-                Ribbit! VIP Status!
-              </motion.h3>
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className={`text-lg mb-4 text-center font-semibold ${
-                  theme === "dark" ? "text-gray-200" : "text-gray-600"
-                } drop-shadow-md`}
-              >
-                You’re eligible for GTD Free Mint!
-              </motion.p>
-              <motion.button
-                onClick={() => setShowPopup(false)}
-                className={`px-8 py-2 ${
-                  theme === "dark"
-                    ? "bg-yellow-600 hover:bg-yellow-700 text-black"
-                    : "bg-yellow-400 hover:bg-yellow-500 text-black"
-                } rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Close
-              </motion.button>
-              <Confetti
-                recycle={false}
-                numberOfPieces={300}
-                colors={["#FFD700", "#00FF00", "#FFFFFF"]}
-              />
-            </motion.div>
-          ) : whitelistType === "fcfsWL" ? (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, type: "spring" }}
-              className={`max-w-md w-full p-8 ${
-                theme === "dark"
-                  ? "bg-gradient-to-br from-gray-700 via-blue-700 to-gray-700"
-                  : "bg-gradient-to-br from-gray-200 via-blue-200 to-gray-200"
-              } rounded-2xl shadow-2xl border ${
-                theme === "dark" ? "border-gray-700" : "border-gray-200"
-              } relative overflow-hidden flex flex-col items-center justify-center`}
-            >
-              <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
-              <motion.div
-                animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 1.2, repeat: Infinity, repeatType: "loop" }}
-              >
-                <Image
-                  src="/emojis/stareye.png"
-                  alt="Stareye Frog"
-                  width={300}
-                  height={300}
-                  className="drop-shadow-lg"
-                />
-              </motion.div>
-              <motion.h3
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className={`text-2xl font-bold mb-2 text-center ${
-                  theme === "dark" ? "text-white" : "text-gray-800"
-                }`}
-              >
-                Ribbit! You’re In!
-              </motion.h3>
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className={`text-lg mb-4 text-center ${
-                  theme === "dark" ? "text-gray-200" : "text-gray-600"
-                }`}
-              >
-                You’re eligible for FCFS Whitelist!
-              </motion.p>
-              <motion.button
-                onClick={() => setShowPopup(false)}
-                className={`px-8 py-2 ${
-                  theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-                } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Close
-              </motion.button>
-              <Confetti recycle={false} numberOfPieces={100} colors={["#1E90FF", "#87CEEB"]} />
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, type: "spring" }}
-              className={`max-w-md w-full p-8 ${
-                theme === "dark"
-                  ? "bg-gradient-to-br from-red-700 via-gray-800 to-gray-700"
-                  : "bg-gradient-to-br from-red-100 via-white to-gray-100"
-              } rounded-2xl shadow-2xl border ${
-                theme === "dark" ? "border-gray-700" : "border-gray-200"
-              } relative overflow-hidden flex flex-col items-center justify-center`}
-            >
-              <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
-              >
-                <Image
-                  src="/emojis/cry.png"
-                  alt="Cry Frog"
-                  width={300}
-                  height={300}
-                  className="drop-shadow-lg"
-                />
-              </motion.div>
-              <h3
-                className={`text-3xl font-bold mb-2 text-center ${
-                  theme === "dark" ? "text-white" : "text-gray-800"
-                }`}
-              >
-                Ribbit! Sorry!
-              </h3>
-              <p
-                className={`text-lg mb-4 text-center ${
-                  theme === "dark" ? "text-gray-200" : "text-gray-600"
-                }`}
-              >
-                You’re not on the whitelist yet.
-              </p>
-              <motion.button
-                onClick={handleTwitterFollow}
-                className={`px-8 py-2 ${
-                  theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
-                } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
-                Turn on Twitter Notifications
-              </motion.button>
-              <motion.button
-                onClick={() => setShowPopup(false)}
-                className={`mt-4 px-8 py-2 ${
-                  theme === "dark"
-                    ? "bg-gray-600 hover:bg-gray-700 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-800"
-                } rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Close
-              </motion.button>
-            </motion.div>
-          )}
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
+    {whitelistType === "gtdFreeMint" ? (
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+        className={`max-w-md w-full p-8 ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-yellow-700 via-green-700 to-blue-700"
+            : "bg-gradient-to-br from-yellow-300 via-green-300 to-blue-300"
+        } rounded-2xl shadow-2xl border ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
+        } relative overflow-hidden flex flex-col items-center justify-center`}
+      >
+        <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-20 pointer-events-none" />
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
+        >
+          <Image
+            src="/emojis/stareye.png"
+            alt="Stareye Frog"
+            width={300}
+            height={300}
+            className="drop-shadow-lg"
+          />
+        </motion.div>
+        <motion.h3
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className={`text-3xl font-extrabold mb-2 text-center ${
+            theme === "dark" ? "text-white" : "text-gray-800"
+          } drop-shadow-md`}
+        >
+          Ribbit! VIP Status!
+        </motion.h3>
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className={`text-lg mb-4 text-center font-semibold ${
+            theme === "dark" ? "text-gray-200" : "text-gray-600"
+          } drop-shadow-md`}
+        >
+          You’re eligible for GTD Free Mint!
+        </motion.p>
+        <motion.button
+          onClick={() =>
+            window.open(
+              "https://twitter.com/intent/tweet?text=" +
+                encodeURIComponent(
+                  
+                  "Oh damn! I just got approved for a GTD spot for @froggyfolios mint!"
+                ),
+              "_blank"
+            )
+          }
+          className={`px-8 py-2 mb-4 ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
+          Share on X
+        </motion.button>
+        <motion.button
+          onClick={() => setShowPopup(false)}
+          className={`px-8 py-2 ${
+            theme === "dark"
+              ? "bg-yellow-600 hover:bg-yellow-700 text-black"
+              : "bg-yellow-400 hover:bg-yellow-500 text-black"
+          } rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Close
+        </motion.button>
+        <Confetti
+          recycle={false}
+          numberOfPieces={300}
+          colors={["#FFD700", "#00FF00", "#FFFFFF"]}
+        />
+      </motion.div>
+    ) : whitelistType === "fcfsWL" ? (
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+        className={`max-w-md w-full p-8 ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-gray-700 via-blue-700 to-gray-700"
+            : "bg-gradient-to-br from-gray-200 via-blue-200 to-gray-200"
+        } rounded-2xl shadow-2xl border ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
+        } relative overflow-hidden flex flex-col items-center justify-center`}
+      >
+        <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
+        <motion.div
+          animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 1.2, repeat: Infinity, repeatType: "loop" }}
+        >
+          <Image
+            src="/emojis/stareye.png"
+            alt="Stareye Frog"
+            width={300}
+            height={300}
+            className="drop-shadow-lg"
+          />
+        </motion.div>
+        <motion.h3
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className={`text-2xl font-bold mb-2 text-center ${
+            theme === "dark" ? "text-white" : "text-gray-800"
+          }`}
+        >
+          Ribbit! You’re In!
+        </motion.h3>
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className={`text-lg mb-4 text-center ${
+            theme === "dark" ? "text-gray-200" : "text-gray-600"
+          }`}
+        >
+          You’re eligible for FCFS Whitelist!
+        </motion.p>
+        <motion.button
+          onClick={() =>
+            window.open(
+              "https://twitter.com/intent/tweet?text=" +
+                encodeURIComponent(
+                  "Not bad! Happy with the FCFS spot for @froggyfolios mint — but I want that GTD. This is my direct application to Froggy: gimme that GTD spot!"
+                ),
+              "_blank"
+            )
+          }
+          className={`px-8 py-2 mb-4 ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
+          Share on X
+        </motion.button>
+        <motion.button
+          onClick={() => setShowPopup(false)}
+          className={`px-8 py-2 ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Close
+        </motion.button>
+        <Confetti recycle={false} numberOfPieces={100} colors={["#1E90FF", "#87CEEB"]} />
+      </motion.div>
+    ) : (
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+        className={`max-w-md w-full p-8 ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-red-700 via-gray-800 to-gray-700"
+            : "bg-gradient-to-br from-red-100 via-white to-gray-100"
+        } rounded-2xl shadow-2xl border ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
+        } relative overflow-hidden flex flex-col items-center justify-center`}
+      >
+        <div className="absolute inset-0 bg-[url('/frog-pattern.png')] opacity-10 pointer-events-none" />
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 1, repeat: Infinity, repeatType: "loop" }}
+        >
+          <Image
+            src="/emojis/cry.png"
+            alt="Cry Frog"
+            width={300}
+            height={300}
+            className="drop-shadow-lg"
+          />
+        </motion.div>
+        <h3
+          className={`text-3xl font-bold mb-2 text-center ${
+            theme === "dark" ? "text-white" : "text-gray-800"
+          }`}
+        >
+          Ribbit! Sorry!
+        </h3>
+        <p
+          className={`text-lg mb-4 text-center ${
+            theme === "dark" ? "text-gray-200" : "text-gray-600"
+          }`}
+        >
+          You’re not on the whitelist yet.
+        </p>
+        <motion.button
+          onClick={handleTwitterFollow}
+          className={`px-8 py-2 ${
+            theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"
+          } text-white rounded-full font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Image src="/x-logo.png" alt="X Logo" width={20} height={20} />
+          Turn on Twitter Notifications
+        </motion.button>
+        <motion.button
+          onClick={() => setShowPopup(false)}
+          className={`mt-4 px-8 py-2 ${
+            theme === "dark"
+              ? "bg-gray-600 hover:bg-gray-700 text-white"
+              : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+          } rounded-full font-semibold transition-all shadow-md hover:shadow-lg`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Close
+        </motion.button>
+      </motion.div>
+    )}
+  </div>
+)}
 
       {/* Footer */}
       <footer className="mt-auto px-4 py-4 bg-gradient-to-r from-purple-800 to-pink-800 text-center">
