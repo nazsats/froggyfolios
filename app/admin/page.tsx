@@ -347,7 +347,7 @@ export default function AdminPanel() {
                 <strong>Username:</strong> {selectedSubmission.twitterUsername}
               </p>
               <p>
-                <strong>Wallet:</strong> {selectedSubmission.wallet}
+                <strong>Wallets:</strong> {selectedSubmission.wallet}
               </p>
               <p>
                 <strong>Message:</strong> {selectedSubmission.message}
